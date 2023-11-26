@@ -12,19 +12,19 @@ export const Sidebar = () => {
         <S.Logo src="logo.png" alt="Website Logo" />
       </S.LogoWrapper>
       <S.WrapperOptions>
-        <S.Option onClick={() => navigate("/dashboard", { replace: true })}>
+        <S.Option onClick={() => navigate("/dashboard")}>
           <House size={25} />
           <S.OptionTitle>Dashboard</S.OptionTitle>
         </S.Option>
-        <S.Option onClick={() => navigate("/words", { replace: true })}>
+        <S.Option onClick={() => navigate("/words")}>
           <Quotes size={25} />
           <S.OptionTitle>Palavras</S.OptionTitle>
         </S.Option>
-        <S.Option onClick={() => navigate("/cells", { replace: true })}>
+        <S.Option onClick={() => navigate("/cells")}>
           <Globe size={25} />
           <S.OptionTitle>Células</S.OptionTitle>
         </S.Option>
-        <S.Option onClick={() => navigate("/events", { replace: true })}>
+        <S.Option onClick={() => navigate("/events")}>
           <Ticket size={25} />
           <S.OptionTitle>Eventos</S.OptionTitle>
         </S.Option>
