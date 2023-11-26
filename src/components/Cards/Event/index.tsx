@@ -11,7 +11,7 @@ interface IEventCard {
   id: number;
 }
 
-export const EventCard = ({ image, title, id, date }: IEventCard) => {
+export const EventCard = ({ image, title, date }: IEventCard) => {
   const [modalOpen, setModalOpen] = useState(false);
 
   return (

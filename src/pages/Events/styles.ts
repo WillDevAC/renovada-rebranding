@@ -1,5 +1,4 @@
 import styled from 'styled-components';
-import { border_rounded, secondary } from '../../styles/variables';
 
 export const ActionsEvents = styled.div`
   display: flex;
