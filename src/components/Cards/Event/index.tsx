@@ -5,13 +5,17 @@ import { Button } from "../../Button";
 import * as S from "./styles";
 
 interface IEventCard {
-  image: string;
+  image: string | null;
   title: string;
   date: string;
-  id: number;
+  id: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  videoUrl: string;
 }
 
-export const EventCard = ({ image, title, date }: IEventCard) => {
+export const EventCard = ({id, image, title, date, onDelete }: IEventCard) => {
   const [modalOpen, setModalOpen] = useState(false);
 
   return (
@@ -29,7 +33,7 @@ export const EventCard = ({ image, title, date }: IEventCard) => {
             Visualizar
           </Button>
           <Button variant="edit">Editar</Button>
-          <Button variant="delete">Excluir</Button>
+          <Button variant="delete" onClick={() => onDelete(id)}>Excluir</Button>
         </S.CardEventActions>
       </S.CardEvent>
 
