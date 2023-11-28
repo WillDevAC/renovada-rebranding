@@ -6,7 +6,7 @@ import { useAuthStore } from "../../stores/auth.store";
 import { toast } from "react-toastify";
 import { BeatLoader } from "react-spinners";
 import { Button } from "../../components/Button";
-import { Input } from "../../components/Input";
+import Input from "../../components/Input";
 
 import api from "../../services/api";
 
