@@ -5,6 +5,8 @@ import formatDate from "../../../utils";
 import YouTube from "react-youtube";
 
 import * as S from "./styles";
+import { toast } from "react-toastify";
+import api from "../../../services/api";
 
 interface IEventCard {
   image: string | null;
@@ -35,6 +37,13 @@ export const NewsCard = ({
       autoplay: 0,
     },
   };
+  const handleDelete = (id: string) => {
+    try {
+      const reponse = api.delete(`/news/${id}`);
+    } catch (err) {
+      toast.error("Ocorreu um erro ao deletar a noticia. Motivo" + err);
+    }
+  };
 
   return (
     <>
@@ -51,7 +60,9 @@ export const NewsCard = ({
             Visualizar
           </Button>
           <Button variant="edit">Editar</Button>
-          <Button variant="delete">Excluir</Button>
+          <Button variant="delete" onClick={() => handleDelete(id)}>
+            Deletar
+          </Button>
         </S.CardEventActions>
         <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}>
           <h1>{title}</h1>

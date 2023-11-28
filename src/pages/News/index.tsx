@@ -58,98 +58,113 @@ export const NewsPage = () => {
 
   const { data, isLoading } = useQuery("getEventList", GET_NEWS_LIST);
 
-  return (
-    <Layout>
-      <S.ActionsNews>
-        <h1>Notícias</h1>
-        <S.Actions>
-          <Button variant="default" onClick={() => setIsModalOpen(true)}>
-            Cadastrar notícia
-          </Button>
-        </S.Actions>
-      </S.ActionsNews>
-      <S.NewsWrapper>
-        {isLoading && <span>Carregando notícias...</span>}
+   const handleDelete = async (id: string) => {
+     try {
+       await api.delete(`/news/${id}`);
 
-        {!isLoading && data.length === 0 && (
-          <span>Não há noticias cadastradas.</span>
-        )}
+       toast.success("Notícia excluida com sucesso!");
+     } catch (error) {
+       toast.error("Erro ao excluir notícia:" + error);
+     }
+   };
 
-        {!isLoading &&
-          data.length > 0 &&
-          data.map((event: NewsData) => (
-            <NewsCard
-              key={event.id}
-              title={event.title}
-              date={event.labelDate}
-              image={event.img?.url || null}
-              id={event.id}
-              videoUrl={event.videoUrl}
-              content={event.content}
-              createdAt={event.createdAt}
-              updatedAt={event.updatedAt}
-              onEdit={() => handleEdit(event)}
-            />
-          ))}
-      </S.NewsWrapper>
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        <h2>Cadastrar notícias</h2>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <label>
-            Título:
-            <Input
-              type="text"
-              name="title"
-              {...register("title", { required: "Este campo é obrigatório" })}
-            />
-            {errors.title && (
-              <S.ErrorMessage>{errors.title.message}</S.ErrorMessage>
-            )}
-          </label>
+   return (
+     <Layout>
+       <S.ActionsNews>
+         <h1>Notícias</h1>
+         <S.Actions>
+           <Button variant="default" onClick={() => setIsModalOpen(true)}>
+             Cadastrar notícia
+           </Button>
+         </S.Actions>
+       </S.ActionsNews>
+       <S.NewsWrapper>
+         {isLoading && <span>Carregando notícias...</span>}
 
-          <label>
-            Conteúdo:
-            <TextArea
-              rows={4}
-              cols={50}
-              {...register("content", { required: "Este campo é obrigatório" })}
-            />
-            {errors.content && (
-              <S.ErrorMessage>{errors.content.message}</S.ErrorMessage>
-            )}
-          </label>
+         {!isLoading && data.length === 0 && (
+           <span>Não há noticias cadastradas.</span>
+         )}
 
-          <label>
-            Descrição curta:
-            <Input
-              type="text"
-              name="shortDescription"
-              {...register("shortDescription", {
-                required: "Este campo é obrigatório",
-              })}
-            />
-            {errors.shortDescription && (
-              <S.ErrorMessage>{errors.shortDescription.message}</S.ErrorMessage>
-            )}
-          </label>
+         {!isLoading &&
+           data.length > 0 &&
+           data.map((event: NewsData) => (
+             <NewsCard
+               key={event.id}
+               title={event.title}
+               date={event.labelDate}
+               image={event.img?.url || null}
+               id={event.id}
+               videoUrl={event.videoUrl}
+               content={event.content}
+               createdAt={event.createdAt}
+               updatedAt={event.updatedAt}
+               onEdit={() => handleEdit(event)}
+               onDelete={handleDelete}
+             />
+           ))}
+       </S.NewsWrapper>
+       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+         <h2>Cadastrar notícias</h2>
+         <form onSubmit={handleSubmit(onSubmit)}>
+           <label>
+             Título:
+             <Input
+               type="text"
+               name="title"
+               {...register("title", { required: "Este campo é obrigatório" })}
+             />
+             {errors.title && (
+               <S.ErrorMessage>{errors.title.message}</S.ErrorMessage>
+             )}
+           </label>
 
-          <label>
-            URL do vídeo:
-            <Input
-              type="text"
-              name="videoUrl"
-              {...register("videoUrl", {
-                required: "Este campo é obrigatório",
-              })}
-            />
-            {errors.videoUrl && (
-              <S.ErrorMessage>{errors.videoUrl.message}</S.ErrorMessage>
-            )}
-          </label>
+           <label>
+             Conteúdo:
+             <TextArea
+               rows={4}
+               cols={50}
+               {...register("content", {
+                 required: "Este campo é obrigatório",
+               })}
+             />
+             {errors.content && (
+               <S.ErrorMessage>{errors.content.message}</S.ErrorMessage>
+             )}
+           </label>
 
-          <Button type="submit">Cadastrar</Button>
-        </form>
-      </Modal>
-    </Layout>
-  );
+           <label>
+             Descrição curta:
+             <Input
+               type="text"
+               name="shortDescription"
+               {...register("shortDescription", {
+                 required: "Este campo é obrigatório",
+               })}
+             />
+             {errors.shortDescription && (
+               <S.ErrorMessage>
+                 {errors.shortDescription.message}
+               </S.ErrorMessage>
+             )}
+           </label>
+
+           <label>
+             URL do vídeo:
+             <Input
+               type="text"
+               name="videoUrl"
+               {...register("videoUrl", {
+                 required: "Este campo é obrigatório",
+               })}
+             />
+             {errors.videoUrl && (
+               <S.ErrorMessage>{errors.videoUrl.message}</S.ErrorMessage>
+             )}
+           </label>
+
+           <Button type="submit">Cadastrar</Button>
+         </form>
+       </Modal>
+     </Layout>
+   );
 };
