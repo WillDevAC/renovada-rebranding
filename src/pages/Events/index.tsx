@@ -25,6 +25,7 @@ interface FormData {
     price: number,
     isRequiredSubscription: boolean,
     maxRegistered: number,
+    SubscribersEvent: object,
     isHighlighted: boolean,
 }
 
@@ -44,6 +45,7 @@ interface EventsData {
     isRequiredSubscription: boolean,
     maxRegistered: number,
     isHighlighted: boolean,
+    SubscribersEvent: object,
     createdAt: string;
     updatedAt: string;
 }
@@ -117,12 +119,14 @@ export const EventsPage = () => {
                       <EventCard
                           key={event.id}
                           title={event.title}
-                          date={event.labelDate}
+                          date={event.date}
+                          labelDate={event.labelDate}
                           image={event.img?.url || null}
                           id={event.id}
                           videoUrl={event.videoUrl}
                           content={event.content}
                           createdAt={event.createdAt}
+                          subscribers={event.SubscribersEvent}
                           updatedAt={event.updatedAt}
                           onEdit={() => handleEdit(event)}
                           onDelete={handleDelete}
