@@ -1,4 +1,3 @@
-import React from "react";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { useAuthStore } from "../stores/auth.store";
 
@@ -7,7 +6,7 @@ import { DashboardPage } from "../pages/dashboard";
 import { EventsPage } from "../pages/Events";
 import { CellsPage } from "../pages/cells";
 import { WordsPage } from "../pages/Words";
-import {NewsPage} from "../pages/News"
+import { NewsPage } from "../pages/News";
 
 export const RouterController = () => {
   const authStore = useAuthStore();
@@ -16,7 +15,9 @@ export const RouterController = () => {
   return (
     <BrowserRouter>
       <Routes>
-        {!isAuthenticated && <Route path="/*" element={<Navigate to="/" replace={true} />} />}
+        {!isAuthenticated && (
+          <Route path="/*" element={<Navigate to="/" replace={true} />} />
+        )}
         <Route path="/" element={<AuthPage />} />
         {isAuthenticated && (
           <>
@@ -24,7 +25,7 @@ export const RouterController = () => {
             <Route path="/cells" element={<CellsPage />} />
             <Route path="/words" element={<WordsPage />} />
             <Route path="/events" element={<EventsPage />} />
-             <Route path="/news" element={<NewsPage />} />
+            <Route path="/news" element={<NewsPage />} />
           </>
         )}
       </Routes>

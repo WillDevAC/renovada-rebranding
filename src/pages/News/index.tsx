@@ -42,13 +42,15 @@ interface ImageUploadResponse {
   data: {
     id: string;
   };
+  id: string;
 }
 
 export const NewsPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [editingNews, setEditingNews] = useState<NewsData | null>(null);
-  const [listNews, setListNews] = useState<FormData | null>(null);
+  const [listNews, setListNews] = useState<NewsData[] | null>(null);
+
   const [loading, setLoading] = useState(false);
 
   const {
@@ -70,13 +72,17 @@ export const NewsPage: React.FC = () => {
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     setLoading(true);
     try {
-      let imgUpload = selectedImage;
+      let imgUpload: File | string | null = selectedImage;
 
       if (!selectedImage) {
-        imgUpload = listNews[0].imgId;
+        if (listNews && listNews.length > 0) {
+          imgUpload = listNews[0].imgId || "";
+        } else {
+          imgUpload = "";
+        }
       } else {
         const formData = new FormData();
-        formData.append("file", imgUpload);
+        formData.append("file", imgUpload as File);
 
         const imageResponse = await api.post<ImageUploadResponse>(
           "/image/upload",
@@ -157,11 +163,12 @@ export const NewsPage: React.FC = () => {
       <S.NewsWrapper>
         {isLoading && <span>Carregando notícias...</span>}
 
-        {!isLoading && data.length === 0 && (
+        {!isLoading && data && data.length === 0 && (
           <span>Não há noticias cadastradas.</span>
         )}
 
         {!isLoading &&
+          data &&
           data.length > 0 &&
           data.map((event: NewsData) => (
             <NewsCard
@@ -188,7 +195,6 @@ export const NewsPage: React.FC = () => {
             Título:
             <Input
               type="text"
-              name="title"
               {...register("title", { required: "Este campo é obrigatório" })}
             />
             {errors.title && (
@@ -200,7 +206,6 @@ export const NewsPage: React.FC = () => {
             Descrição curta:
             <Input
               type="text"
-              name="shortDescription"
               {...register("shortDescription", {
                 required: "Este campo é obrigatório",
               })}
@@ -227,7 +232,6 @@ export const NewsPage: React.FC = () => {
             URL do vídeo:
             <Input
               type="text"
-              name="videoUrl"
               {...register("videoUrl", {
                 required: "Este campo é obrigatório",
               })}

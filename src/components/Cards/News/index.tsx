@@ -2,7 +2,7 @@ import { Modal } from "../../Modal";
 import { useState } from "react";
 import { Button } from "../../Button";
 import formatDate from "../../../utils";
-import YouTube from "react-youtube";
+
 import { BeatLoader } from "react-spinners";
 
 import * as S from "./styles";
@@ -38,14 +38,6 @@ export const NewsCard = ({
 }: IEventCard) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [deleteClicked, setDeleteClicked] = useState(false);
-
-  const youtubeOpts = {
-    height: "515",
-    width: "99%",
-    playerVars: {
-      autoplay: 0,
-    },
-  };
 
   const handleDelete = () => {
     setDeleteClicked(true);
