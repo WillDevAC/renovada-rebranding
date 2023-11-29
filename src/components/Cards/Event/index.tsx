@@ -19,30 +19,13 @@ interface IEventCard {
     videoUrl: string;
 }
 
-export const EventCard = ({
-                              id,
-                              image,
-                              content,
-                              labelDate,
-                              videoUrl,
-                              subscribers,
-                              createdAt,
-                              updatedAt,
-                              title,
-                              date,
-                              onDelete
+export const EventCard = ({ id, image, content, labelDate, videoUrl, subscribers, createdAt, updatedAt,
+                              title, date, onEdit, onDelete,  address, isRequiredSubscription, maxRegistered,
+                              SubscribersEvent, isHighlighted, price
                           }: IEventCard) => {
     const [modalOpen, setModalOpen] = useState(false);
     const [usersAll, setUsers] = useState([]);
     const [selectedUserId, setSelectedUserId] = useState(null);
-
-    const youtubeOpts = {
-        height: "515",
-        width: "99%",
-        playerVars: {
-            autoplay: 0,
-        },
-    };
 
     useEffect(() => {
         // Fetch the list of users when the component mounts
@@ -60,7 +43,6 @@ export const EventCard = ({
 
     const handleSubscribe = async (EventId) => {
         try {
-            console.log(selectedUserId);
             if (selectedUserId) {
 
                 await api.post(`/event/add-subscriber/${selectedUserId}/${EventId}`);
@@ -92,10 +74,17 @@ export const EventCard = ({
                     <Button variant="view" onClick={() => setModalOpen(true)}>
                         Visualizar
                     </Button>
-                    <Button variant="edit">Editar</Button>
+                    <Button
+                        variant="edit"
+                        onClick={() =>
+                            onEdit({ id, title, content, videoUrl,
+                                labelDate, address, date, isRequiredSubscription,
+                                maxRegistered, SubscribersEvent, isHighlighted, price})
+                        }>
+                        Editar
+                    </Button>
                     <Button variant="delete" onClick={() => onDelete(id)}>Excluir</Button>
                 </S.CardEventActions>
-            </S.CardEvent>
 
             <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}>
                 <h1>{title}</h1>
@@ -153,6 +142,7 @@ export const EventCard = ({
                     Inscrever Participante
                 </button>
             </Modal>
+            </S.CardEvent>
         </>
     );
 };

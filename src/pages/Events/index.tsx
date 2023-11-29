@@ -13,6 +13,7 @@ import TextArea from "../../components/TextArea";
 import Select from "../../components/Select";
 import {Modal} from "../../components/Modal";
 import {toast} from "react-toastify";
+import {BeatLoader} from "react-spinners";
 
 interface FormData {
     title: string;
@@ -61,6 +62,7 @@ export const EventsPage = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedImage, setSelectedImage] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
+    const [editingEvents, setEditingEvents] = useState<EventsData | null>(null);
     const [listEvents, setListEvents] = useState<EventsData[] | null>(null);
 
     const {
@@ -108,14 +110,34 @@ export const EventsPage = () => {
             eventsData.price = parseFloat(data.price); // Convert to numeric value
             eventsData.maxRegistered = parseFloat(data.maxRegistered); // Convert to numeric value
 
-            console.log(data);
-            await api.post("/event", eventsData);
+            if (editingEvents) {
+                await api.put(`/event/${editingEvents.id}`, eventsData);
+            } else {
+                await api.post("/event", eventsData);
+            }
+
             await queryClient.refetchQueries("getEventList");
             setIsModalOpen(false);
             toast.success("Evento Cadastrado");
         } catch (error) {
             toast.error("Erro ao cadastrar evento:" + error);
         }
+    };
+
+    const handleEdit = (event: EventsData) => {
+        setEditingEvents(event);
+        setValue("title", event.title);
+        setValue("content", event.content);
+        setValue("videoUrl", event.videoUrl);
+        setValue("labelDate", event.labelDate);
+        setValue("address", event.address);
+        setValue("date", event.date);
+        setValue("price", event.price);
+        setValue("isRequiredSubscription", event.isRequiredSubscription);
+        setValue("maxRegistered", event.maxRegistered);
+        setValue("SubscribersEvent", event.SubscribersEvent);
+        setValue("isHighlighted", event.isHighlighted);
+        setIsModalOpen(true);
     };
 
     const GET_EVENTS_LIST = async () => {
@@ -160,14 +182,19 @@ export const EventsPage = () => {
                           title={event.title}
                           date={event.date}
                           labelDate={event.labelDate}
+                          address={event.address}
+                          isRequiredSubscription={event.isRequiredSubscription}
+                          maxRegistered={event.maxRegistered}
+                          isHighlighted={event.isHighlighted}
                           image={event.img?.url || null}
                           id={event.id}
                           videoUrl={event.videoUrl}
+                          price={event.price}
                           content={event.content}
                           createdAt={event.createdAt}
                           subscribers={event.SubscribersEvent}
                           updatedAt={event.updatedAt}
-                          onEdit={() => handleEdit(event)}
+                          onEdit={handleEdit}
                           onDelete={handleDelete}
                       />
                   ))
@@ -319,7 +346,15 @@ export const EventsPage = () => {
                     )}
                 </label>
 
-                <Button type="submit">Cadastrar</Button>
+                <Button type="submit" variant="edit">
+                    {loading ? (
+                        <BeatLoader color={"#fff"} size={10} />
+                    ) : editingEvents ? (
+                        "Editar"
+                    ) : (
+                        "Cadastrar"
+                    )}
+                </Button>
             </form>
         </Modal>
     </Layout>

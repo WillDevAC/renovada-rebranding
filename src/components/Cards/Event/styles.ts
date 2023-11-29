@@ -46,7 +46,7 @@ export const CardVideo = styled.div`
   iframe{
     width: 60%;
     height: 90%;
-  
+
   }
- 
+
 `;
