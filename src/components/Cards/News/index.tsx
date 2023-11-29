@@ -3,10 +3,9 @@ import { useState } from "react";
 import { Button } from "../../Button";
 import formatDate from "../../../utils";
 import YouTube from "react-youtube";
+import { BeatLoader } from "react-spinners";
 
 import * as S from "./styles";
-import { toast } from "react-toastify";
-import api from "../../../services/api";
 
 interface IEventCard {
   image: string | null;
@@ -17,6 +16,10 @@ interface IEventCard {
   createdAt: string;
   updatedAt: string;
   videoUrl: string;
+  shortDescription: string;
+  onDelete: (id: string) => void;
+  onEdit: (event: any) => void;
+  loading: boolean;
 }
 
 export const NewsCard = ({
@@ -24,12 +27,18 @@ export const NewsCard = ({
   title,
   date,
   id,
+  shortDescription,
   content,
   createdAt,
   updatedAt,
   videoUrl,
+  loading,
+  onDelete,
+  onEdit,
 }: IEventCard) => {
   const [modalOpen, setModalOpen] = useState(false);
+  const [deleteClicked, setDeleteClicked] = useState(false);
+
   const youtubeOpts = {
     height: "515",
     width: "99%",
@@ -37,12 +46,11 @@ export const NewsCard = ({
       autoplay: 0,
     },
   };
-  const handleDelete = (id: string) => {
-    try {
-      const reponse = api.delete(`/news/${id}`);
-    } catch (err) {
-      toast.error("Ocorreu um erro ao deletar a noticia. Motivo" + err);
-    }
+
+  const handleDelete = () => {
+    setDeleteClicked(true);
+    onDelete(id);
+    setModalOpen(false);
   };
 
   return (
@@ -59,9 +67,24 @@ export const NewsCard = ({
           <Button variant="view" onClick={() => setModalOpen(true)}>
             Visualizar
           </Button>
-          <Button variant="edit">Editar</Button>
-          <Button variant="delete" onClick={() => handleDelete(id)}>
-            Deletar
+
+          <Button
+            variant="edit"
+            onClick={() =>
+              onEdit({ id, title, content, videoUrl, shortDescription })
+            }
+          >
+            Editar
+          </Button>
+          <Button
+            variant="delete"
+            onClick={handleDelete}
+            disabled={deleteClicked}
+          >
+            {loading && deleteClicked && (
+              <BeatLoader color={"#FFF"} size={10} />
+            )}
+            {!loading && !deleteClicked && "Excluir"}
           </Button>
         </S.CardEventActions>
         <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}>
@@ -70,10 +93,16 @@ export const NewsCard = ({
           <p>Criado em: {formatDate(createdAt)}</p>
           <p>Atualizado em: {formatDate(updatedAt)}</p>
           {videoUrl && (
-            <YouTube
-              videoId="https://www.youtube.com/watch?v=zzyJrvHRBdo"
-              opts={youtubeOpts}
-            />
+            <S.CardVideo>
+              <iframe
+                title="Selected Video"
+                className="w-full h-full"
+                src={`https://www.youtube.com/embed/${videoUrl.split("v=")[1]}`}
+                allowFullScreen
+                frameBorder="0"
+                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+              ></iframe>
+            </S.CardVideo>
           )}
         </Modal>
       </S.CardEvent>
