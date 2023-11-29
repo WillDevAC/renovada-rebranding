@@ -8,6 +8,7 @@ export const CardEvent = styled.div`
   height: auto;
   background-color: ${secondary};
   border-radius: ${border_rounded};
+
 `;
 
 export const CardEventImageWrapper = styled.div`
@@ -35,4 +36,17 @@ export const CardEventActions = styled.div`
   width: 100%;
   padding: 1rem;
   gap: 1rem;
+`;
+export const CardVideo = styled.div`
+  width: 100%;
+  height: 80% !important;
+  display: flex;
+  justify-content: center;
+
+  iframe{
+    width: 60%;
+    height: 90%;
+  
+  }
+ 
 `;

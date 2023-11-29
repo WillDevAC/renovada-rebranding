@@ -99,33 +99,39 @@ export const EventCard = ({
 
             <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}>
                 <h1>{title}</h1>
-                {subscribers.map(subscriber => (
-
-                    <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-whit truncate dark:text-white">
-                            {subscriber.user.name}
-                        </p>
-                        <p className="text-sm text-whit truncate dark:text-gray-400">
-                            {subscriber.user.email}
-                        </p>
-                    </div>
-
-                ))}
 
                 <p>{content}</p>
                 <p>Criado em: {formatDate(createdAt)}</p>
                 <p>Atualizado em: {formatDate(updatedAt)}</p>
                 {videoUrl && (
-                    <YouTube
-                        videoId="https://www.youtube.com/watch?v=zzyJrvHRBdo"
-                        opts={youtubeOpts}
-                    />
+                    <S.CardVideo>
+                        <iframe
+                            title="Selected Video"
+                            className="w-full h-full"
+                            src={`https://www.youtube.com/embed/${videoUrl.split("v=")[1]}`}
+                            allowFullScreen
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                        ></iframe>
+                    </S.CardVideo>
                 )}
                 <p>{labelDate}</p>
 
-                {subscribers.length === 0 && (
-                    <h3>Nenhum participante cadastrado para esse
-                        evento</h3>
+                {subscribers ? (
+                    // Render the list of subscribers if there are any
+                    subscribers.map(subscriber => (
+                        <div key={subscriber.id} className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-whit truncate dark:text-white">
+                                {subscriber.user.name}
+                            </p>
+                            <p className="text-sm text-whit truncate dark:text-gray-400">
+                                {subscriber.user.email}
+                            </p>
+                        </div>
+                    ))
+                ) : (
+                    // Render a message if there are no subscribers
+                    <h3>Nenhum participante cadastrado para esse evento</h3>
                 )}
 
                 <select

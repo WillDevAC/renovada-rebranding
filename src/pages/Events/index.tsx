@@ -50,8 +50,19 @@ interface EventsData {
     updatedAt: string;
 }
 
+interface ImageUploadResponse {
+    data: {
+        id: string;
+    };
+    id: string;
+}
+
 export const EventsPage = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedImage, setSelectedImage] = useState<File | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [listEvents, setListEvents] = useState<EventsData[] | null>(null);
+
     const {
         register,
         handleSubmit,
@@ -61,16 +72,44 @@ export const EventsPage = () => {
 
     const queryClient = useQueryClient();
 
+    const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            setSelectedImage(file);
+        }
+    };
     const onSubmit: SubmitHandler<FormData> = async (data) => {
         try {
-            data.imgId = null;
-            data.isRequiredSubscription = data.isRequiredSubscription === "true";
-            data.isHighlighted = data.isHighlighted === "true";
-            data.price = parseFloat(data.price); // Convert to numeric value
-            data.maxRegistered = parseFloat(data.maxRegistered); // Convert to numeric value
+            let imgUpload: File | string | null = selectedImage;
+
+            if (!selectedImage) {
+                if (listEvents && listEvents.length > 0) {
+                    imgUpload = listEvents[0].imgId || "";
+                } else {
+                    imgUpload = "";
+                }
+            } else {
+                const formData = new FormData();
+                formData.append("file", imgUpload as File);
+
+                const imageResponse = await api.post<ImageUploadResponse>(
+                    "/image/upload",
+                    formData
+                );
+                imgUpload = imageResponse.data.id;
+            }
+            const eventsData = {
+                ...data,
+                imgId: imgUpload,
+            };
+
+            eventsData.isRequiredSubscription = data.isRequiredSubscription === "true";
+            eventsData.isHighlighted = data.isHighlighted === "true";
+            eventsData.price = parseFloat(data.price); // Convert to numeric value
+            eventsData.maxRegistered = parseFloat(data.maxRegistered); // Convert to numeric value
 
             console.log(data);
-            await api.post("/event", data);
+            await api.post("/event", eventsData);
             await queryClient.refetchQueries("getEventList");
             setIsModalOpen(false);
             toast.success("Evento Cadastrado");
@@ -81,7 +120,7 @@ export const EventsPage = () => {
 
     const GET_EVENTS_LIST = async () => {
         const response = await api.get(`/event`);
-        console.log(response);
+        setListEvents(response.data.news);
         return response.data.events;
     };
 
@@ -203,6 +242,15 @@ export const EventsPage = () => {
                     {errors.date && (
                         <S.ErrorMessage>{errors.date.message}</S.ErrorMessage>
                     )}
+                </label>
+
+                <label>
+                    Imagem:
+                    <S.InputImage
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                    />
                 </label>
 
                 <label>
