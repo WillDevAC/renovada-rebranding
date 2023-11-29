@@ -37,3 +37,16 @@ export const CardEventActions = styled.div`
   padding: 1rem;
   gap: 1rem;
 `;
+export const CardVideo = styled.div`
+  width: 100%;
+  height: 80% !important;
+  display: flex;
+  justify-content: center;
+
+  iframe{
+    width: 60%;
+    height: 90%;
+  
+  }
+ 
+`;

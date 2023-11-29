@@ -12,15 +12,18 @@ export const ModalOverlay = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+    padding: 50px;
+ 
 `;
 
 export const ModalContent = styled.div`
   background: ${background};
   border: 1px solid #4b5563;
-  padding: 20px;
+  padding: 50px;
   min-width: 500px;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+   height: 90%;
 `;
 
 export const CloseButton = styled.button`
