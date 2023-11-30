@@ -7,6 +7,7 @@ import YouTube from "react-youtube";
 import * as S from "./styles";
 import formatDate from "../../../utils";
 import {toast} from "react-toastify";
+import styled from "styled-components";
 
 interface IEventCard {
     image: string | null;
@@ -19,6 +20,12 @@ interface IEventCard {
     videoUrl: string;
 }
 
+const SubscribersList = styled.div`
+  max-height: 100px; 
+  overflow-y: auto;
+  margin-bottom: 5px;
+`;
+
 export const EventCard = ({ id, image, content, labelDate, videoUrl, subscribers, createdAt, updatedAt,
                               title, date, onEdit, onDelete,  address, isRequiredSubscription, maxRegistered,
                               SubscribersEvent, isHighlighted, price
@@ -28,7 +35,6 @@ export const EventCard = ({ id, image, content, labelDate, videoUrl, subscribers
     const [selectedUserId, setSelectedUserId] = useState(null);
 
     useEffect(() => {
-        // Fetch the list of users when the component mounts
         const fetchUsers = async () => {
             try {
                 const response = await api.get("/user");
@@ -45,8 +51,7 @@ export const EventCard = ({ id, image, content, labelDate, videoUrl, subscribers
         try {
             if (selectedUserId) {
 
-                await api.post(`/event/add-subscriber/${selectedUserId}/${EventId}`);
-
+                await api.post(`/event/add-subscriber-with-cash-pay/${selectedUserId}/${EventId}`);
                 setSelectedUserId(null);
 
                 toast.success("Participante adicionado com sucesso");
@@ -90,8 +95,8 @@ export const EventCard = ({ id, image, content, labelDate, videoUrl, subscribers
                 <h1>{title}</h1>
 
                 <p>{content}</p>
-                <p>Criado em: {formatDate(createdAt)}</p>
-                <p>Atualizado em: {formatDate(updatedAt)}</p>
+                {/*<p>Criado em: {formatDate(createdAt)}</p>*/}
+                {/*<p>Atualizado em: {formatDate(updatedAt)}</p>*/}
                 {videoUrl && (
                     <S.CardVideo>
                         <iframe
@@ -106,22 +111,27 @@ export const EventCard = ({ id, image, content, labelDate, videoUrl, subscribers
                 )}
                 <p>{labelDate}</p>
 
+                <h3>Participantes cadastrados para esse evento</h3>
+
+                <SubscribersList className="subscribers-list">
                 {subscribers ? (
-                    // Render the list of subscribers if there are any
                     subscribers.map(subscriber => (
-                        <div key={subscriber.id} className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-whit truncate dark:text-white">
-                                {subscriber.user.name}
-                            </p>
-                            <p className="text-sm text-whit truncate dark:text-gray-400">
-                                {subscriber.user.email}
-                            </p>
+                        <div style={{display: 'flex', flexDirection: 'row', gap: '10px'}}>
+                            <div key={subscriber.id} style={{flex: 1}}>
+                                <p className="text-sm font-medium text-whit truncate dark:text-white">
+                                    {subscriber.user.name}</p>
+                            </div>
+
+                            <div key={subscriber.id} style={{flex: 1}}>
+                                <p className="text-sm text-whit truncate dark:text-gray-400">
+                                    {subscriber.user.email}</p>
+                            </div>
                         </div>
                     ))
                 ) : (
-                    // Render a message if there are no subscribers
                     <h3>Nenhum participante cadastrado para esse evento</h3>
                 )}
+                </SubscribersList>
 
                 <select
                     name="selectedUserId"

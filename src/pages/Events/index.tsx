@@ -1,10 +1,10 @@
-import { useState } from "react";
-import { useQuery } from "react-query";
-import { Button } from "../../components/Button";
-import { EventCard } from "../../components/Cards/Event";
-import { Layout } from "../../components/Layout";
-import { useQueryClient } from 'react-query';
-import { useForm, SubmitHandler } from "react-hook-form";
+import {useState} from "react";
+import {useQuery} from "react-query";
+import {Button} from "../../components/Button";
+import {EventCard} from "../../components/Cards/Event";
+import {Layout} from "../../components/Layout";
+import {useQueryClient} from 'react-query';
+import {useForm, SubmitHandler} from "react-hook-form";
 
 import * as S from "./styles";
 import api from "../../services/api";
@@ -69,7 +69,7 @@ export const EventsPage = () => {
         register,
         handleSubmit,
         setValue,
-        formState: { errors },
+        formState: {errors},
     } = useForm<FormData>();
 
     const queryClient = useQueryClient();
@@ -146,7 +146,7 @@ export const EventsPage = () => {
         return response.data.events;
     };
 
-    const { data, isLoading } = useQuery("getEventList", GET_EVENTS_LIST);
+    const {data, isLoading} = useQuery("getEventList", GET_EVENTS_LIST);
 
     const handleDelete = async (id: string) => {
         try {
@@ -159,204 +159,230 @@ export const EventsPage = () => {
         }
     };
 
-  return (
-    <Layout>
-      <S.ActionsEvents>
-        <h1>Eventos</h1>
-        <S.Actions>
-          <Button variant="default" onClick={() => setIsModalOpen(true)}>Cadastrar evento</Button>
-        </S.Actions>
-      </S.ActionsEvents>
-      <S.EventsWrapper>
-        {isLoading}
+    return (
+        <Layout>
+            <S.ActionsEvents>
+                <h1>Eventos</h1>
+                <S.Actions>
+                    <Button variant="default" onClick={() => setIsModalOpen(true)}>Cadastrar evento</Button>
+                </S.Actions>
+            </S.ActionsEvents>
+            <S.EventsWrapper>
+                {isLoading}
 
-        {!isLoading && data.length < 0 && (
-          <span>Não há eventos cadastrados.</span>
-        )}
+                {!isLoading && data.length < 0 && (
+                    <span>Não há eventos cadastrados.</span>
+                )}
 
-          {!isLoading ? (
-              data.length > 0 ? (
-                  data.map((event: EventsData) => (
-                      <EventCard
-                          key={event.id}
-                          title={event.title}
-                          date={event.date}
-                          labelDate={event.labelDate}
-                          address={event.address}
-                          isRequiredSubscription={event.isRequiredSubscription}
-                          maxRegistered={event.maxRegistered}
-                          isHighlighted={event.isHighlighted}
-                          image={event.img?.url || null}
-                          id={event.id}
-                          videoUrl={event.videoUrl}
-                          price={event.price}
-                          content={event.content}
-                          createdAt={event.createdAt}
-                          subscribers={event.SubscribersEvent}
-                          updatedAt={event.updatedAt}
-                          onEdit={handleEdit}
-                          onDelete={handleDelete}
-                      />
-                  ))
-              ) : (
-                  <span>Não há eventos cadastrados.</span>
-              )
-          ) : (
-              <span>Carregando eventos...</span>
-          )}
-      </S.EventsWrapper>
-
-        <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-            <h2>Cadastrar notícias</h2>
-            <form onSubmit={handleSubmit(onSubmit)}>
-                <label>
-                    Título:
-                    <Input
-                        type="text"
-                        name="title"
-                        {...register("title", { required: "Este campo é obrigatório" })}
-                    />
-                    {errors.title && (
-                        <S.ErrorMessage>{errors.title.message}</S.ErrorMessage>
-                    )}
-                </label>
-
-                <label>
-                    Conteúdo do Evento:
-                    <TextArea
-                        rows={4}
-                        cols={50}
-                        {...register("content", {
-                            required: "Este campo é obrigatório",
-                        })}
-                    />
-                    {errors.content && (
-                        <S.ErrorMessage>{errors.content.message}</S.ErrorMessage>
-                    )}
-                </label>
-
-                <label>
-                    Data e Hora:
-                    <Input
-                        type="text"
-                        name="labelDate"
-                        {...register("labelDate", { required: "Este campo é obrigatório" })}
-                    />
-                    {errors.labelDate && (
-                        <S.ErrorMessage>{errors.labelDate.message}</S.ErrorMessage>
-                    )}
-                </label>
-
-                <label>
-                    Endereço:
-                    <Input
-                        type="text"
-                        name="address"
-                        {...register("address", { required: "Este campo é obrigatório" })}
-                    />
-                    {errors.address && (
-                        <S.ErrorMessage>{errors.address.message}</S.ErrorMessage>
-                    )}
-                </label>
-
-                <label>
-                    Data do Evento:
-                    <Input
-                        type="text"
-                        name="date"
-                        {...register("date", { required: "Este campo é obrigatório" })}
-                    />
-                    {errors.date && (
-                        <S.ErrorMessage>{errors.date.message}</S.ErrorMessage>
-                    )}
-                </label>
-
-                <label>
-                    Imagem:
-                    <S.InputImage
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                    />
-                </label>
-
-                <label>
-                    É Necessário se Inscrever para Participar:
-                    <Select
-                        {...register("isRequiredSubscription", { required: "Este campo é obrigatório" })}
-                        options={[
-                            { value: true, label: "Sim" },
-                            { value: false, label: "Não" },
-                        ]}
-                    />
-                    {errors.isRequiredSubscription && (
-                        <S.ErrorMessage>{errors.isRequiredSubscription.message}</S.ErrorMessage>
-                    )}
-                </label>
-
-                <label>
-                    Máximo de Participantes:
-                    <Input
-                        type="number"
-                        name="maxRegistered"
-                        {...register("maxRegistered", { required: "Este campo é obrigatório" })}
-                    />
-                    {errors.maxRegistered && (
-                        <S.ErrorMessage>{errors.maxRegistered.message}</S.ErrorMessage>
-                    )}
-                </label>
-
-                <label>
-                    Preço (Se houver):
-                    <Input
-                        type="number"
-                        name="price"
-                        {...register("price", { required: "Este campo é obrigatório" })}
-                    />
-                    {errors.price && (
-                        <S.ErrorMessage>{errors.price.message}</S.ErrorMessage>
-                    )}
-                </label>
-
-                <label>
-                    Evento em Destaque:
-                    <Select
-                        {...register("isHighlighted", { required: "Este campo é obrigatório" })}
-                        options={[
-                            { value: true, label: "Sim" },
-                            { value: false, label: "Não" },
-                        ]}
-                    />
-                    {errors.isHighlighted && (
-                        <S.ErrorMessage>{errors.isRequiredSubscription.message}</S.ErrorMessage>
-                    )}
-                </label>
-
-                <label>
-                    URL do vídeo:
-                    <Input
-                        type="text"
-                        name="videoUrl"
-                        {...register("videoUrl", {
-                            required: "Este campo é obrigatório",
-                        })}
-                    />
-                    {errors.videoUrl && (
-                        <S.ErrorMessage>{errors.videoUrl.message}</S.ErrorMessage>
-                    )}
-                </label>
-
-                <Button type="submit" variant="edit">
-                    {loading ? (
-                        <BeatLoader color={"#fff"} size={10} />
-                    ) : editingEvents ? (
-                        "Editar"
+                {!isLoading ? (
+                    data.length > 0 ? (
+                        data.map((event: EventsData) => (
+                            <EventCard
+                                key={event.id}
+                                title={event.title}
+                                date={event.date}
+                                labelDate={event.labelDate}
+                                address={event.address}
+                                isRequiredSubscription={event.isRequiredSubscription}
+                                maxRegistered={event.maxRegistered}
+                                isHighlighted={event.isHighlighted}
+                                image={event.img?.url || null}
+                                id={event.id}
+                                videoUrl={event.videoUrl}
+                                price={event.price}
+                                content={event.content}
+                                createdAt={event.createdAt}
+                                subscribers={event.SubscribersEvent}
+                                updatedAt={event.updatedAt}
+                                onEdit={handleEdit}
+                                onDelete={handleDelete}
+                            />
+                        ))
                     ) : (
-                        "Cadastrar"
-                    )}
-                </Button>
-            </form>
-        </Modal>
-    </Layout>
-  );
+                        <span>Não há eventos cadastrados.</span>
+                    )
+                ) : (
+                    <span>Carregando eventos...</span>
+                )}
+            </S.EventsWrapper>
+
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+                <h2>Cadastrar evento</h2>
+                <form onSubmit={handleSubmit(onSubmit)}>
+                    <div style={{display: 'flex', flexDirection: 'row', gap: '10px'}}>
+                        <div style={{flex: 1}}>
+                            <label>
+                                Título:
+                                <Input
+                                    type="text"
+                                    name="title"
+                                    {...register("title", {required: "Este campo é obrigatório"})}
+                                />
+                                {errors.title && (
+                                    <S.ErrorMessage>{errors.title.message}</S.ErrorMessage>
+                                )}
+                            </label>
+                        </div>
+                        <div style={{flex: 1}}>
+                            <label>
+                                Data e Hora:
+                                <Input
+                                    type="text"
+                                    name="labelDate"
+                                    {...register("labelDate", {required: "Este campo é obrigatório"})}
+                                />
+                                {errors.labelDate && (
+                                    <S.ErrorMessage>{errors.labelDate.message}</S.ErrorMessage>
+                                )}
+                            </label>
+                        </div>
+                    </div>
+
+                    <div style={{display: 'flex', flexDirection: 'row', gap: '10px'}}>
+                        <div style={{flex: 1}}>
+                            <label>
+                                Endereço:
+                                <Input
+                                    type="text"
+                                    name="address"
+                                    {...register("address", {required: "Este campo é obrigatório"})}
+                                />
+                                {errors.address && (
+                                    <S.ErrorMessage>{errors.address.message}</S.ErrorMessage>
+                                )}
+                            </label>
+                        </div>
+
+                        <div style={{flex: 1}}>
+                            <label>
+                                Data do Evento:
+                                <Input
+                                    type="text"
+                                    name="date"
+                                    {...register("date", {required: "Este campo é obrigatório"})}
+                                />
+                                {errors.date && (
+                                    <S.ErrorMessage>{errors.date.message}</S.ErrorMessage>
+                                )}
+                            </label>
+                        </div>
+                    </div>
+
+                    <div style={{display: 'flex', flexDirection: 'row', gap: '10px'}}>
+                        <div style={{flex: 1}}>
+                            <label>
+                                É Necessário se inscrição:
+                                <Select
+                                    {...register("isRequiredSubscription", {required: "Este campo é obrigatório"})}
+                                    options={[
+                                        {value: true, label: "Sim"},
+                                        {value: false, label: "Não"},
+                                    ]}
+                                />
+                                {errors.isRequiredSubscription && (
+                                    <S.ErrorMessage>{errors.isRequiredSubscription.message}</S.ErrorMessage>
+                                )}
+                            </label>
+                        </div>
+                        <div style={{flex: 1}}>
+                            <label>
+                                Evento em Destaque:
+                                <Select
+                                    {...register("isHighlighted", {required: "Este campo é obrigatório"})}
+                                    options={[
+                                        {value: true, label: "Sim"},
+                                        {value: false, label: "Não"},
+                                    ]}
+                                />
+                                {errors.isHighlighted && (
+                                    <S.ErrorMessage>{errors.isRequiredSubscription.message}</S.ErrorMessage>
+                                )}
+                            </label>
+                        </div>
+                    </div>
+
+                    <div style={{display: 'flex', flexDirection: 'row', gap: '10px'}}>
+                        <div style={{flex: 1}}>
+                            <label>
+                                Preço (Se houver):
+                                <Input
+                                    type="number"
+                                    name="price"
+                                    {...register("price", {required: "Este campo é obrigatório"})}
+                                />
+                                {errors.price && (
+                                    <S.ErrorMessage>{errors.price.message}</S.ErrorMessage>
+                                )}
+                            </label>
+                        </div>
+                        <div style={{flex: 1}}>
+                            <label>
+                                Máximo de Participantes:
+                                <Input
+                                    type="number"
+                                    name="maxRegistered"
+                                    {...register("maxRegistered", {required: "Este campo é obrigatório"})}
+                                />
+                                {errors.maxRegistered && (
+                                    <S.ErrorMessage>{errors.maxRegistered.message}</S.ErrorMessage>
+                                )}
+                            </label>
+                        </div>
+                    </div>
+
+                    <div style={{display: 'flex', flexDirection: 'row', gap: '10px'}}>
+                        <div style={{flex: 1}}>
+                            <label>
+                                Imagem:
+                                <S.InputImage
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                />
+                            </label>
+                        </div>
+                        <div style={{flex: 1}}>
+                            <label>
+                                URL do vídeo:
+                                <Input
+                                    type="text"
+                                    name="videoUrl"
+                                    {...register("videoUrl", {
+                                        required: "Este campo é obrigatório",
+                                    })}
+                                />
+                                {errors.videoUrl && (
+                                    <S.ErrorMessage>{errors.videoUrl.message}</S.ErrorMessage>
+                                )}
+                            </label>
+                        </div>
+                    </div>
+
+                        <label>
+                            Conteúdo do Evento:
+                            <TextArea
+                                rows={4}
+                                cols={50}
+                                {...register("content", {
+                                    required: "Este campo é obrigatório",
+                                })}
+                            />
+                            {errors.content && (
+                                <S.ErrorMessage>{errors.content.message}</S.ErrorMessage>
+                            )}
+                        </label>
+
+                    <Button type="submit" variant="edit">
+                        {loading ? (
+                            <BeatLoader color={"#fff"} size={10}/>
+                        ) : editingEvents ? (
+                            "Editar"
+                        ) : (
+                            "Cadastrar"
+                        )}
+                    </Button>
+                </form>
+            </Modal>
+        </Layout>
+    );
 };
