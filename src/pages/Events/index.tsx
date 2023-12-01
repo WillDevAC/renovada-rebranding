@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useQuery } from "react-query";
 import { Button } from "../../components/Button";
-import { EventCard } from "../../components/Cards/Event";
+import { EventCard as EventCardComponent } from "../../components/Cards/Event";
 import { Layout } from "../../components/Layout";
 import { useQueryClient } from "react-query";
 import { useForm, SubmitHandler } from "react-hook-form";
@@ -26,7 +26,7 @@ interface FormData {
   price: number;
   isRequiredSubscription: boolean;
   maxRegistered: number;
-  SubscribersEvent: object;
+  SubscribersEvent: any;
   isHighlighted: boolean;
 }
 
@@ -49,6 +49,7 @@ interface EventsData {
   SubscribersEvent: object;
   createdAt: string;
   updatedAt: string;
+  subscribers: any
 }
 
 interface ImageUploadResponse {
@@ -178,34 +179,35 @@ export const EventsPage = () => {
           <span>Não há eventos cadastrados.</span>
         )}
 
-        {!isLoading ? (
-          data?.length > 0 ? (
-            data.map((event: EventsData) => (
-              <EventCard
-                key={event.id}
-                title={event.title}
-                date={event.date}
-                labelDate={event.labelDate}
-                address={event.address}
-                isRequiredSubscription={event.isRequiredSubscription}
-                maxRegistered={event.maxRegistered}
-                isHighlighted={event.isHighlighted}
-                image={event.img?.url || null}
-                id={event.id}
-                videoUrl={event.videoUrl}
-                price={event.price}
-                content={event.content}
-                createdAt={event.createdAt}
-                SubscribersEvent={event.SubscribersEvent || []}
-                updatedAt={event.updatedAt}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            ))
-          ) : (
-            <span>Não há eventos cadastrados.</span>
-          )
-        ) : null}
+         {!isLoading ? (
+      data?.length > 0 ? (
+        data.map((event: EventsData) => (
+          <EventCardComponent
+            key={event.id}
+            title={event.title}
+            date={event.date}
+            labelDate={event.labelDate}
+            address={event.address}
+            isRequiredSubscription={event.isRequiredSubscription}
+            maxRegistered={event.maxRegistered}
+            isHighlighted={event.isHighlighted}
+            image={event.img?.url || null}
+            id={event.id}
+            videoUrl={event.videoUrl}
+            price={event.price}
+            content={event.content}
+            createdAt={event.createdAt}
+            SubscribersEvent={event.SubscribersEvent || []}
+            updatedAt={event.updatedAt}
+            subscribers={event.subscribers} 
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+        ))
+      ) : (
+        <span>Não há eventos cadastrados.</span>
+      )
+    ) : null}
       </S.EventsWrapper>
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <h2>Cadastrar notícias</h2>

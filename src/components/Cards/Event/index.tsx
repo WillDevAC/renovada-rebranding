@@ -1,4 +1,3 @@
-//@typescript-eslint/no-explicit-any
 import { Modal } from "../../Modal";
 import { useEffect, useState } from "react";
 import { Button } from "../../Button";
@@ -7,6 +6,7 @@ import api from "../../../services/api.ts";
 import * as S from "./styles";
 import formatDate from "../../../utils";
 import { toast } from "react-toastify";
+
 
 interface IEventCard {
   image: string | null;
@@ -22,25 +22,18 @@ interface IEventCard {
   address: string;
   isRequiredSubscription: boolean;
   maxRegistered: number;
-  SubscribersEvent: YourSubscriberType[] | null | any;
+
   isHighlighted: boolean;
   price: string;
   labelDate: string;
-  subscribers?: any;
+  SubscribersEvent: null | any;
+  subscribers: any;
 }
 
 interface Users {
   id: string;
   name: string;
   email: string;
-}
-
-interface YourSubscriberType {
-  id: string;
-  user: {
-    name: string;
-    email: string;
-  };
 }
 
 export const EventCard: React.FC<IEventCard> = ({
@@ -165,7 +158,7 @@ export const EventCard: React.FC<IEventCard> = ({
 
           {Array.isArray(subscribers) ? (
             // Render the list of subscribers if it's an array
-            subscribers.map((subscriber: YourSubscriberType) => (
+            subscribers.map((subscriber: any) => (
               <div key={subscriber.id} className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-whit truncate dark:text-white">
                   {subscriber.user.name}
