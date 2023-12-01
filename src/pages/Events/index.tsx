@@ -15,6 +15,7 @@ import Select from "../../components/Select";
 import { Modal } from "../../components/Modal";
 import { toast } from "react-toastify";
 import { BeatLoader } from "react-spinners";
+import formatDate from "../../utils";
 interface FormData {
   title: string;
   content: string;
@@ -104,13 +105,16 @@ export const EventsPage = () => {
       const eventsData = {
         ...data,
         imgId: imgUpload,
+        isRequiredSubscription: Boolean(data.isRequiredSubscription),
+        isHighlighted: Boolean(data.isHighlighted),
       };
 
-      eventsData.isRequiredSubscription = data.isRequiredSubscription;
-      eventsData.isHighlighted = data.isHighlighted;
+      // eventsData.isRequiredSubscription = data.isRequiredSubscription;
+      // eventsData.isHighlighted = data.isHighlighted;
 
       eventsData.price = parseFloat(data.price.toString()) || 0;
       eventsData.maxRegistered = parseFloat(data.maxRegistered.toString()) || 0;
+      console.log(eventsData);
 
       if (editingEvents) {
         await api.put(`/event/${editingEvents.id}`, eventsData);
@@ -133,7 +137,7 @@ export const EventsPage = () => {
     setValue("videoUrl", event.videoUrl);
     setValue("labelDate", event.labelDate);
     setValue("address", event.address);
-    setValue("date", event.date);
+    setValue("date", formatDate(event.date));
     const priceValue = parseFloat(event.price);
     setValue("price", isNaN(priceValue) ? 0 : priceValue);
     setValue("isRequiredSubscription", event.isRequiredSubscription);

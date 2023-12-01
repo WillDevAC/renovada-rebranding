@@ -4,8 +4,8 @@ import { Button } from "../../Button";
 import api from "../../../services/api.ts";
 
 import * as S from "./styles";
-import formatDate from "../../../utils";
 import { toast } from "react-toastify";
+import styled from "styled-components";
 
 
 interface IEventCard {
@@ -35,6 +35,14 @@ interface Users {
   name: string;
   email: string;
 }
+
+const SubscribersList = styled.div`
+  background: #616161;
+  max-height: 200px; 
+  overflow-y: auto;
+  padding: 10px;
+  margin-bottom: 5px;
+`;
 
 export const EventCard: React.FC<IEventCard> = ({
   id,
@@ -140,8 +148,6 @@ export const EventCard: React.FC<IEventCard> = ({
           <h1>{title}</h1>
 
           <p>{content}</p>
-          <p>Criado em: {formatDate(createdAt)}</p>
-          <p>Atualizado em: {formatDate(updatedAt)}</p>
           {videoUrl && (
             <S.CardVideo>
               <iframe
@@ -155,22 +161,26 @@ export const EventCard: React.FC<IEventCard> = ({
             </S.CardVideo>
           )}
           <p>{labelDate}</p>
+          <h3 className="mt-5">Participantes</h3>
+          <SubscribersList className="subscribers-list">
+          {Array.isArray(SubscribersEvent) && SubscribersEvent.length > 0 ? (
+              SubscribersEvent.map((subscriber: any) => (
+                  <div style={{display: 'flex', flexDirection: 'row', gap: '10px'}}>
+                    <div style={{flex: 1}}>
+                      <p >
+                        {subscriber.user.name}</p>
+                    </div>
 
-          {Array.isArray(subscribers) ? (
-            // Render the list of subscribers if it's an array
-            subscribers.map((subscriber: any) => (
-              <div key={subscriber.id} className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-whit truncate dark:text-white">
-                  {subscriber.user.name}
-                </p>
-                <p className="text-sm text-whit truncate dark:text-gray-400">
-                  {subscriber.user.email}
-                </p>
-              </div>
+                    <div style={{flex: 1}}>
+                      <p >
+                        {subscriber.user.email}</p>
+                    </div>
+                  </div>
             ))
           ) : (
             <h3>Nenhum participante cadastrado para esse evento</h3>
           )}
+          </SubscribersList>
 
           <select
             name="selectedUserId"
