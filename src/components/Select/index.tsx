@@ -26,31 +26,33 @@ const StyledSelect = styled.select`
   border-radius: ${border_rounded};
   background-color: ${input_background};
 `;
-
 interface Option {
-    value: boolean;
-    label: string;
+  value: boolean;
+  label: string;
 }
 
 interface ISelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
-    label?: string;
-    register?: UseFormRegister<any>;
-    options: Option[];
+  label?: string;
+  register?: UseFormRegister<any>;
+  options: Option[];
 }
 
-const Select: React.ForwardRefRenderFunction<HTMLSelectElement, ISelectProps> = ({ label, register, options, ...rest }, ref) => {
-    return (
-        <SelectWrapper>
-            {label && <Label>{label}</Label>}
-            <StyledSelect ref={ref} {...register} {...rest}>
-                {options.map((option) => (
-                    <option key={option.value} value={option.value}>
-                        {option.label}
-                    </option>
-                ))}
-            </StyledSelect>
-        </SelectWrapper>
-    );
+const Select: React.ForwardRefRenderFunction<
+  HTMLSelectElement,
+  ISelectProps
+> = ({ label, register, options, ...rest }, ref) => {
+  return (
+    <SelectWrapper>
+      {label && <Label>{label}</Label>}
+      <StyledSelect ref={ref} {...register} {...rest}>
+        {options.map((option) => (
+          <option key={String(option.value)} value={String(option.value)}>
+            {option.label}
+          </option>
+        ))}
+      </StyledSelect>
+    </SelectWrapper>
+  );
 };
 
 export default forwardRef(Select);

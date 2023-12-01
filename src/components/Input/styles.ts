@@ -1,6 +1,5 @@
-import styled from "styled-components";
-
-import { border_rounded, input_background } from "../../styles/variables";
+import styled from 'styled-components';
+import { border_rounded, input_background } from '../../styles/variables';
 
 export const InputWrapper = styled.div`
   display: flex;
@@ -22,4 +21,9 @@ export const StyledInput = styled.input`
   color: #FFF;
   border-radius: ${border_rounded};
   background-color: ${input_background};
+  width: 100%;
+
+  @media (min-width: 768px) {
+    /* Estilos adicionais para telas maiores, se necessário */
+  }
 `;
