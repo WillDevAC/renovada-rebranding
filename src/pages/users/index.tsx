@@ -17,9 +17,16 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { Button } from "../../components/Button";
 import { Modal } from "../../components/Modal";
 import Input from "../../components/Input";
+import Select from "../../components/Select";
 import { useForm, SubmitHandler, Controller } from "react-hook-form"; // Importe as funções necessárias
 import InputMask from "react-input-mask";
 import api from "../../services/api";
+import { toast } from "react-toastify";
+interface ImageUploadResponse {
+  data: {
+    id: string;
+  };
+}
 
 interface User {
   id: string;
@@ -28,6 +35,8 @@ interface User {
   avatar?: {
     url: string;
   };
+  avatarId: string;
+  isActive: boolean;
 }
 
 interface FormInputs {
@@ -36,7 +45,7 @@ interface FormInputs {
   password: string;
   birthday: string;
   gender: string;
-  avatarId: string;
+  avatar: FileList;
   address: string;
   cpf: string;
   number: string;
@@ -54,6 +63,7 @@ interface FormInputs {
 export const UsersPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [openModal, setOpenModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<FileList | null>(null);
 
   const {
     control,
@@ -63,18 +73,16 @@ export const UsersPage: React.FC = () => {
   } = useForm<FormInputs>();
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const usersResponse = await api.get("/user");
-        setUsers(usersResponse.data.users);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
     fetchData();
   }, []);
-
+  const fetchData = async () => {
+    try {
+      const usersResponse = await api.get<{ users: User[] }>("/user");
+      setUsers(usersResponse.data.users);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
   const darkTheme = createTheme({
     palette: {
       mode: "dark",
@@ -90,10 +98,37 @@ export const UsersPage: React.FC = () => {
     // reset();
   };
 
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      setSelectedImage(files);
+    }
+  };
+
   const handleSaveUser: SubmitHandler<FormInputs> = async (data) => {
     try {
+      let imgUpload: File | string | null = selectedImage;
+
+      if (!selectedImage) {
+        if (users && users.length > 0) {
+          imgUpload = users.avatarId || "";
+        } else {
+          imgUpload = "";
+        }
+      } else {
+        const formData = new FormData();
+        formData.append("file", imgUpload as File);
+
+        const imageResponse = await api.post<ImageUploadResponse>(
+          "/image/upload",
+          formData
+        );
+        imgUpload = imageResponse.data.id;
+      }
+
       const formattedData = {
         ...data,
+        imgId: imgUpload,
         cpf: data.cpf.replace(/[^\d]/g, ""),
         cep: data.cep.replace(/[^\d]/g, ""),
         number: data.number.replace(/[^\d]/g, ""),
@@ -104,6 +139,38 @@ export const UsersPage: React.FC = () => {
       handleCloseModal();
     } catch (error) {
       console.error("Error saving user:", error);
+    }
+  };
+
+  const deleteUser = async (id: string) => {
+    try {
+      await api.delete(`user/${id}`);
+      toast.success("Usuário deletado com sucesso!");
+    } catch (err) {
+      toast.error("Occoreu um erro ao deletar o usuário. Motivo:" + err);
+    } finally {
+      fetchData();
+    }
+  };
+  const desactiveUser = async (id: string) => {
+    try {
+      await api.put(`user/desactive/${id}`);
+      toast.success("Usuário desativado");
+    } catch (err) {
+      toast.error("Não foi possivel desativar o usuário");
+    } finally {
+      fetchData();
+    }
+  };
+
+  const activeUser = async (id: string) => {
+    try {
+      await api.put(`user/active/${id}`);
+      toast.success("Usuário ativado");
+    } catch (err) {
+      toast.error("Não foi possivel ativar o usuário");
+    } finally {
+      fetchData();
     }
   };
 
@@ -147,10 +214,34 @@ export const UsersPage: React.FC = () => {
                     {user.name}
                   </Typography>
                   <Typography color="textSecondary">{user.email}</Typography>
+                  <Typography color="textSecondary">
+                    {user.isActive == true
+                      ? "O usuário esta: ativo"
+                      : "O usuário esta: desativo"}
+                  </Typography>
 
                   <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
                     <Button variant="edit">Editar</Button>
-                    <Button variant="delete">Excluir</Button>
+                    <Button
+                      variant="delete"
+                      onClick={() => deleteUser(user.id)}
+                    >
+                      Excluir
+                    </Button>
+                  </Box>
+                  <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
+                    <Button
+                      variant="edit"
+                      onClick={() =>
+                        user.isActive == true
+                          ? desactiveUser(user.id)
+                          : activeUser(user.id)
+                      }
+                    >
+                      {user.isActive == true
+                        ? "Desativar usuário"
+                        : "Ativar usuário"}
+                    </Button>
                   </Box>
                 </Paper>
               </Grid>
@@ -204,16 +295,21 @@ export const UsersPage: React.FC = () => {
                 name="gender"
                 control={control}
                 defaultValue=""
-                render={({ field }) => <Input label="Gênero:" {...field} />}
-              />
-              <Controller
-                name="avatarId"
-                control={control}
-                defaultValue=""
                 render={({ field }) => (
-                  <Input label="ID do Avatar:" {...field} />
+                  <Select
+                    label="Gênero:"
+                    options={[
+                      { value: "male", label: "Homem" },
+                      { value: "female", label: "Mulher" }, // Corrigido o valor para "female"
+                    ]}
+                    value={field.value} // Adicione esta linha para definir o valor corretamente
+                    onChange={(e) => field.onChange(e.target.value)} // Adicione esta linha para lidar com as alterações no valor
+                  />
                 )}
               />
+
+              <Input type="file" label="Avatar:" onChange={handleImageChange} />
+
               <Controller
                 name="address"
                 control={control}
