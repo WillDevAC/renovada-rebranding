@@ -7,7 +7,6 @@ import * as S from "./styles";
 import { toast } from "react-toastify";
 import styled from "styled-components";
 
-
 interface IEventCard {
   image: string | null;
   title: string;
@@ -38,7 +37,7 @@ interface Users {
 
 const SubscribersList = styled.div`
   background: #616161;
-  max-height: 200px; 
+  max-height: 200px;
   overflow-y: auto;
   padding: 10px;
   margin-bottom: 5px;
@@ -163,23 +162,23 @@ export const EventCard: React.FC<IEventCard> = ({
           <p>{labelDate}</p>
           <h3 className="mt-5">Participantes</h3>
           <SubscribersList className="subscribers-list">
-          {Array.isArray(SubscribersEvent) && SubscribersEvent.length > 0 ? (
+            {Array.isArray(SubscribersEvent) && SubscribersEvent.length > 0 ? (
               SubscribersEvent.map((subscriber: any) => (
-                  <div style={{display: 'flex', flexDirection: 'row', gap: '10px'}}>
-                    <div style={{flex: 1}}>
-                      <p >
-                        {subscriber.user.name}</p>
-                    </div>
-
-                    <div style={{flex: 1}}>
-                      <p >
-                        {subscriber.user.email}</p>
-                    </div>
+                <div
+                  style={{ display: "flex", flexDirection: "row", gap: "10px" }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <p>{subscriber.user.name}</p>
                   </div>
-            ))
-          ) : (
-            <h3>Nenhum participante cadastrado para esse evento</h3>
-          )}
+
+                  <div style={{ flex: 1 }}>
+                    <p>{subscriber.user.email}</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <h3>Nenhum participante cadastrado para esse evento</h3>
+            )}
           </SubscribersList>
 
           <select
