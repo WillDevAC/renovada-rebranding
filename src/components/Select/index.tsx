@@ -27,7 +27,7 @@ const StyledSelect = styled.select`
   background-color: ${input_background};
 `;
 interface Option {
-  value: boolean;
+  value: boolean | string;
   label: string;
 }
 
