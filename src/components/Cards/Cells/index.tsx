@@ -1,5 +1,5 @@
 import {Modal} from "../../Modal";
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {Button} from "../../Button";
 import formatDate from "../../../utils";
 
@@ -8,6 +8,9 @@ import {BeatLoader} from "react-spinners";
 import * as S from "./styles";
 import api from "../../../services/api.ts";
 import {toast} from "react-toastify";
+import Input from "../../Input";
+import TextArea from "../../TextArea";
+import {SubmitHandler, useForm} from "react-hook-form";
 
 interface IEventCard {
     image: string | null;
@@ -29,6 +32,24 @@ interface Users {
     email: string;
 }
 
+interface FormData {
+    groupId: string;
+    amount: number;
+    dateLabel: string,
+    address: string;
+    obs: string;
+}
+
+interface ReportsData {
+    groupId: string;
+    amount: number;
+    dateLabel: string,
+    address: string;
+    obs: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
 export const CellsCard = ({
                               image,
                               name,
@@ -42,9 +63,56 @@ export const CellsCard = ({
                               onEdit,
                           }: IEventCard) => {
     const [modalOpen, setModalOpen] = useState(false);
+    // Modal do Form de criar relatorio
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+
+    const [editingReports, setEditingReports] = useState<ReportsData | null>(null);
+
     const [deleteClicked, setDeleteClicked] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const [usersAll, setUsers] = useState<Users[]>([]);
+
+    const {
+        register,
+        handleSubmit,
+        formState: {errors},
+        reset,
+        setValue,
+    } = useForm<FormData>();
+
+    const onSubmit: SubmitHandler<FormData> = async (data) => {
+        try {
+            const formData = new FormData();
+
+            const reportsData = {
+                ...data,
+
+            };
+
+            reportsData.amount = parseFloat(data.amount.toString()) || 0;
+
+            console.log(reportsData);
+            if (editingReports) {
+                await api.put(`/group/${editingReports.id}`, reportsData);
+            } else {
+                await api.post("/group/add-report", reportsData);
+            }
+
+            setIsModalOpen(false);
+            toast.success(
+                editingReports
+                    ? "Relatório editado com sucesso!"
+                    : "Relatório cadastrado com sucesso!"
+            );
+            reset();
+
+            reset();
+        } catch (error) {
+            toast.error("Erro ao cadastrar/editar Relatório: " + error);
+        } finally {
+            queryClient.invalidateQueries("getCellsList");
+        }
+    };
 
     const handleDelete = () => {
         setDeleteClicked(true);
@@ -129,6 +197,9 @@ export const CellsCard = ({
                         )}
                         {!loading && !deleteClicked && "Excluir"}
                     </Button>
+                        <Button variant="default" onClick={() => setIsModalOpen(true)}>
+                            Cadastrar Relatório
+                        </Button>
                 </S.CardEventActions>
                 <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}>
                     <h1>{name}</h1>
@@ -161,6 +232,82 @@ export const CellsCard = ({
                     >
                         Remover Participante
                     </button>
+                </Modal>
+
+                <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+                    <h2>Cadastrar/editar Relatório</h2>
+
+                    <form onSubmit={handleSubmit(onSubmit)}>
+                        <Input
+                            type="hidden"
+                            value={id}
+                            {...register("groupId", {
+                                required: "Este campo é obrigatório",
+                            })}
+                        />
+                        <input type="hidden" name="groupId" value={id}/>
+                        <label>
+                            Data e Hora:
+                            <Input
+                                {...register("dateLabel", {
+                                    required: "Este campo é obrigatório",
+                                })}
+                            />
+                            {errors.dateLabel && (
+                                <S.ErrorMessage>{errors.dateLabel.message}</S.ErrorMessage>
+                            )}
+                        </label>
+
+                        <label>
+                            Endereço:
+                            <Input
+                                type="text"
+                                {...register("address", {
+                                    required: "Este campo é obrigatório",
+                                })}
+                            />
+                            {errors.address && (
+                                <S.ErrorMessage>{errors.address.message}</S.ErrorMessage>
+                            )}
+                        </label>
+
+                        <label>
+                            Quantidade de Participantes:
+                            <Input
+                                type="number"
+                                {...register("amount", {
+                                    required: "Este campo é obrigatório",
+                                })}
+                            />
+                            {errors.amount && (
+                                <S.ErrorMessage>{errors.amount.message}</S.ErrorMessage>
+                            )}
+                        </label>
+
+                        <label>
+                            Descrição do relatório:
+                            <TextArea
+                                rows={4}
+                                cols={50}
+                                {...register("obs", {
+                                    required: "Este campo é obrigatório",
+                                })}
+                            />
+                            {errors.obs && (
+                                <S.ErrorMessage>{errors.obs.message}</S.ErrorMessage>
+                            )}
+                        </label>
+
+                        <Button type="submit" variant="edit">
+                            {loading ? (
+                                <BeatLoader color={"#fff"} size={10}/>
+                            ) : editingReports ? (
+                                "Editar"
+                            ) : (
+                                "Cadastrar"
+                            )}
+                        </Button>
+                    </form>
                 </Modal>
             </S.CardEvent>
         </>
