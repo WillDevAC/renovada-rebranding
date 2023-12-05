@@ -12,7 +12,7 @@ export const ModalOverlay = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 50px;
+  padding: 30px;
 `;
 
 export const ModalContent = styled.div`
@@ -28,7 +28,7 @@ export const ModalContent = styled.div`
 
   @media (min-width: 768px) {
 
-    padding: 50px;
+    padding: 30px;
   }
 `;
 
