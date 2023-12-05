@@ -12,16 +12,18 @@ import {
   FormControlLabel,
   Checkbox,
 } from "@mui/material";
-import { Layout } from "../../components/Layout";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { Button } from "../../components/Button";
 import { Modal } from "../../components/Modal";
 import Input from "../../components/Input";
 import Select from "../../components/Select";
-import { useForm, SubmitHandler, Controller } from "react-hook-form"; // Importe as funções necessárias
+import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import InputMask from "react-input-mask";
 import api from "../../services/api";
 import { toast } from "react-toastify";
+import { Layout } from "../../components/Layout";
+import * as S from "./styles";
+
 interface ImageUploadResponse {
   data: {
     id: string;
@@ -39,7 +41,7 @@ interface User {
   isActive: boolean;
 }
 
-interface FormInputs {
+interface FormData {
   name: string;
   email: string;
   password: string;
@@ -64,25 +66,29 @@ export const UsersPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [openModal, setOpenModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState<FileList | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const {
     control,
     handleSubmit,
-    reset,
+    register,
     formState: { errors },
-  } = useForm<FormInputs>();
+  } = useForm<FormData>();
 
   useEffect(() => {
     fetchData();
   }, []);
+
   const fetchData = async () => {
     try {
-      const usersResponse = await api.get<{ users: User[] }>("/user");
-      setUsers(usersResponse.data.users);
+      const { data } = await api.get<{ users: User[] }>("/user");
+      setUsers(data.users);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   };
+
   const darkTheme = createTheme({
     palette: {
       mode: "dark",
@@ -91,54 +97,58 @@ export const UsersPage: React.FC = () => {
 
   const handleOpenModal = () => {
     setOpenModal(true);
+    setIsEditMode(false);
   };
 
   const handleCloseModal = () => {
     setOpenModal(false);
-    // reset();
+    setSelectedUser(null);
+    setIsEditMode(false);
   };
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files) {
-      setSelectedImage(files);
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedImage(file);
     }
   };
 
-  const handleSaveUser: SubmitHandler<FormInputs> = async (data) => {
+  const handleSaveUser: SubmitHandler<FormData> = async (data) => {
     try {
       let imgUpload: File | string | null = selectedImage;
 
-      if (!selectedImage) {
-        if (users && users.length > 0) {
-          imgUpload = users.avatarId || "";
-        } else {
-          imgUpload = "";
-        }
-      } else {
+      if (!selectedImage && users.length > 0) {
+        imgUpload = users[0].avatarId || "";
+      } else if (selectedImage) {
         const formData = new FormData();
         formData.append("file", imgUpload as File);
 
-        const imageResponse = await api.post<ImageUploadResponse>(
+        const { data: imageResponse } = await api.post<ImageUploadResponse>(
           "/image/upload",
           formData
         );
-        imgUpload = imageResponse.data.id;
+
+        imgUpload = imageResponse.id;
       }
 
-      const formattedData = {
+      const formattedData: FormData = {
         ...data,
-        imgId: imgUpload,
+        avatarId: imgUpload,
         cpf: data.cpf.replace(/[^\d]/g, ""),
         cep: data.cep.replace(/[^\d]/g, ""),
         number: data.number.replace(/[^\d]/g, ""),
       };
 
-      console.log("Data to be saved:", formattedData);
-      await api.post("/user", formattedData);
+      if (isEditMode) {
+        await api.put(`/user/${selectedUser?.id}`, formattedData);
+      } else {
+        await api.post("/user", formattedData);
+      }
+
       handleCloseModal();
+      fetchData();
     } catch (error) {
-      console.error("Error saving user:", error);
+      toast.error("Error saving user:", error);
     }
   };
 
@@ -146,32 +156,33 @@ export const UsersPage: React.FC = () => {
     try {
       await api.delete(`user/${id}`);
       toast.success("Usuário deletado com sucesso!");
-    } catch (err) {
-      toast.error("Occoreu um erro ao deletar o usuário. Motivo:" + err);
-    } finally {
       fetchData();
+    } catch (err) {
+      toast.error("Ocorreu um erro ao deletar o usuário. Motivo:" + err);
     }
   };
-  const desactiveUser = async (id: string) => {
+
+  const toggleUserStatus = async (id: string, isActive: boolean) => {
+    const action = isActive ? "desactive" : "active";
+
     try {
-      await api.put(`user/desactive/${id}`);
-      toast.success("Usuário desativado");
+      await api.put(`user/${action}/${id}`);
+      const message = isActive ? "Usuário desativado" : "Usuário ativado";
+      toast.success(message);
     } catch (err) {
-      toast.error("Não foi possivel desativar o usuário");
+      const message = isActive
+        ? "Não foi possível desativar o usuário"
+        : "Não foi possível ativar o usuário";
+      toast.error(message);
     } finally {
       fetchData();
     }
   };
 
-  const activeUser = async (id: string) => {
-    try {
-      await api.put(`user/active/${id}`);
-      toast.success("Usuário ativado");
-    } catch (err) {
-      toast.error("Não foi possivel ativar o usuário");
-    } finally {
-      fetchData();
-    }
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user);
+    setIsEditMode(true);
+    handleOpenModal();
   };
 
   return (
@@ -221,7 +232,9 @@ export const UsersPage: React.FC = () => {
                   </Typography>
 
                   <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
-                    <Button variant="edit">Editar</Button>
+                    <Button variant="edit" onClick={() => handleEditUser(user)}>
+                      Editar
+                    </Button>
                     <Button
                       variant="delete"
                       onClick={() => deleteUser(user.id)}
@@ -250,33 +263,58 @@ export const UsersPage: React.FC = () => {
         </Container>
 
         <Modal isOpen={openModal} onClose={handleCloseModal}>
-          <DialogTitle>Cadastrar Usuário</DialogTitle>
+          <DialogTitle>
+            {isEditMode ? "Editar Usuário" : "Cadastrar Usuário"}
+          </DialogTitle>
           <DialogContent>
             <form onSubmit={handleSubmit(handleSaveUser)}>
               <Controller
                 name="name"
                 control={control}
-                defaultValue=""
-                render={({ field }) => <Input label="Nome:" {...field} />}
+                defaultValue={selectedUser ? selectedUser.name : ""}
+                render={({ field }) => (
+                  <Input
+                    label="Nome:"
+                    {...field}
+                    {...register("name", {
+                      required: "Este campo é obrigatório",
+                    })}
+                  />
+                )}
               />
               <Controller
                 name="email"
                 control={control}
-                defaultValue=""
-                render={({ field }) => <Input label="E-mail:" {...field} />}
+                defaultValue={selectedUser ? selectedUser.email : ""}
+                render={({ field }) => (
+                  <Input
+                    label="E-mail:"
+                    {...field}
+                    {...register("email", {
+                      required: "Este campo é obrigatório",
+                    })}
+                  />
+                )}
               />
               <Controller
                 name="password"
                 control={control}
                 defaultValue=""
                 render={({ field }) => (
-                  <Input label="Senha:" type="password" {...field} />
+                  <Input
+                    label="Senha:"
+                    type="password"
+                    {...field}
+                    {...register("password", {
+                      required: "Este campo é obrigatório",
+                    })}
+                  />
                 )}
               />
               <Controller
                 name="birthday"
                 control={control}
-                defaultValue=""
+                defaultValue={selectedUser ? selectedUser.birthday : ""}
                 render={({ field }) => (
                   <InputMask
                     mask="99/99/9999"
@@ -294,32 +332,39 @@ export const UsersPage: React.FC = () => {
               <Controller
                 name="gender"
                 control={control}
-                defaultValue=""
+                defaultValue={selectedUser ? selectedUser.gender : ""}
                 render={({ field }) => (
                   <Select
                     label="Gênero:"
                     options={[
                       { value: "male", label: "Homem" },
-                      { value: "female", label: "Mulher" }, // Corrigido o valor para "female"
+                      { value: "female", label: "Mulher" },
                     ]}
-                    value={field.value} // Adicione esta linha para definir o valor corretamente
-                    onChange={(e) => field.onChange(e.target.value)} // Adicione esta linha para lidar com as alterações no valor
+                    value={field.value}
+                    onChange={(e) => field.onChange(e.target.value)}
                   />
                 )}
               />
+              <label>
+                Imagem:
+                <S.InputImage
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                />
+              </label>
 
-              <Input type="file" label="Avatar:" onChange={handleImageChange} />
-
+              {/* Campos adicionais */}
               <Controller
                 name="address"
                 control={control}
-                defaultValue=""
+                defaultValue={selectedUser ? selectedUser.address : ""}
                 render={({ field }) => <Input label="Endereço:" {...field} />}
               />
               <Controller
                 name="cpf"
                 control={control}
-                defaultValue=""
+                defaultValue={selectedUser ? selectedUser.cpf : ""}
                 render={({ field }) => (
                   <InputMask
                     mask="999.999.999-99"
@@ -332,29 +377,28 @@ export const UsersPage: React.FC = () => {
                   </InputMask>
                 )}
               />
-
               <Controller
                 name="number"
                 control={control}
-                defaultValue=""
+                defaultValue={selectedUser ? selectedUser.number : ""}
                 render={({ field }) => <Input label="Número:" {...field} />}
               />
               <Controller
                 name="city"
                 control={control}
-                defaultValue=""
+                defaultValue={selectedUser ? selectedUser.city : ""}
                 render={({ field }) => <Input label="Cidade:" {...field} />}
               />
               <Controller
                 name="state"
                 control={control}
-                defaultValue=""
+                defaultValue={selectedUser ? selectedUser.state : ""}
                 render={({ field }) => <Input label="Estado:" {...field} />}
               />
               <Controller
                 name="complement"
                 control={control}
-                defaultValue=""
+                defaultValue={selectedUser ? selectedUser.complement : ""}
                 render={({ field }) => (
                   <Input label="Complemento:" {...field} />
                 )}
@@ -362,7 +406,7 @@ export const UsersPage: React.FC = () => {
               <Controller
                 name="cep"
                 control={control}
-                defaultValue=""
+                defaultValue={selectedUser ? selectedUser.cep : ""}
                 render={({ field }) => (
                   <InputMask
                     mask="99999-999"
@@ -382,7 +426,7 @@ export const UsersPage: React.FC = () => {
                 render={({ field }) => (
                   <FormControlLabel
                     control={<Checkbox {...field} />}
-                    label="É visitante?"
+                    label="Sou visitante"
                   />
                 )}
               />
@@ -393,7 +437,7 @@ export const UsersPage: React.FC = () => {
                 render={({ field }) => (
                   <FormControlLabel
                     control={<Checkbox {...field} />}
-                    label="É pastor?"
+                    label="Sou pastor"
                   />
                 )}
               />
@@ -404,7 +448,7 @@ export const UsersPage: React.FC = () => {
                 render={({ field }) => (
                   <FormControlLabel
                     control={<Checkbox {...field} />}
-                    label="Já aceitou Jesus?"
+                    label="Já aceitei Jesus"
                   />
                 )}
               />
@@ -415,16 +459,17 @@ export const UsersPage: React.FC = () => {
                 render={({ field }) => (
                   <FormControlLabel
                     control={<Checkbox {...field} />}
-                    label="É batizado?"
+                    label="Sou batizado"
                   />
                 )}
               />
+
               <DialogActions>
                 <Button onClick={handleCloseModal} color="primary">
                   Cancelar
                 </Button>
                 <Button type="submit" color="primary">
-                  Salvar
+                  {isEditMode ? "Atualizar" : "Salvar"}
                 </Button>
               </DialogActions>
             </form>
