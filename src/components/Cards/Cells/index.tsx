@@ -26,6 +26,7 @@ interface IEventCard {
   createdAt: string;
   updatedAt: string;
   dateLabel: string;
+  GroupMembers: null | any;
   onDelete: (id: string) => void;
   onEdit: (event: any) => void;
   loading: boolean;
@@ -43,6 +44,7 @@ interface FormData {
   dateLabel: string;
   address: string;
   obs: string;
+  GroupMembers: null | any;
   isVisitor: boolean;
   isAcceptedJesus: boolean;
 }
@@ -82,6 +84,7 @@ export const CellsCard = ({
   dateLabel,
   id,
   address,
+  GroupMembers,
   createdAt,
   updatedAt,
   loading,
@@ -162,10 +165,10 @@ export const CellsCard = ({
         const response = await api.get("/user");
         setUsers(response.data.users);
 
-        const groupMembers = response.data.users.filter(
-          (user: any) => user.GroupMember.length > 0
-        );
-        setGroupMembers(groupMembers);
+        // const groupMembers = response.data.users.filter(
+        //   (user: any) => user.GroupMember.length > 0
+        // );
+        // setGroupMembers(groupMembers);
       } catch (error) {
         toast.error("Error ao buscar usuários:" + error);
       }
@@ -271,8 +274,6 @@ export const CellsCard = ({
       toast.error("Não foi possível remover a Presença" + error);
     }
   };
-
-  console.log(groupMembers);
 
   return (
     <>
@@ -399,21 +400,25 @@ export const CellsCard = ({
                     </tr>
                   </thead>
                   <tbody>
-                    {groupMembers.map((member) => (
-                      <tr key={member.id}>
-                        <td>{member.name}</td>
-                        <td>{member.email}</td>
+                  {Array.isArray(GroupMembers) && GroupMembers.length > 0 ? (
+                      GroupMembers.map((membro: any) => (
+                      <tr key={membro.member.id}>
+                        <td>{membro.member.name}</td>
+                        <td>{membro.member.email}</td>
                         <td className="actions">
                           <button
                             // variant="delete"
                             type="button"
-                            onClick={() => handleRemoveMember(id, member.id)}
+                            onClick={() => handleRemoveMember(id, membro.member.id)}
                           >
                             Remover do Grupo
                           </button>
                         </td>
                       </tr>
-                    ))}
+                    ))
+                    ) : (
+                    <h3>Nenhum participante cadastrado para esse grupo</h3>
+                    )}
                   </tbody>
                 </S.Table>
               </>

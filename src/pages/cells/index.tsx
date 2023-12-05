@@ -18,6 +18,7 @@ interface FormData {
   name: string;
   address: string;
   dateLabel: string;
+  GroupMembers: any;
   imgId: string;
 }
 
@@ -29,6 +30,7 @@ interface CellsData {
   img: {
     url: string;
   } | null;
+  GroupMembers: object;
   dateLabel: string;
   createdAt: string;
   updatedAt: string;
@@ -131,6 +133,8 @@ export const CellsPage: React.FC = () => {
       params: { search: searchQuery }, // Add search query parameter
     });
     setListCells(response.data.groups);
+    console.log(response.data.groups);
+
     return response.data.groups;
   };
 
@@ -210,6 +214,7 @@ export const CellsPage: React.FC = () => {
               dateLabel={cell.dateLabel}
               createdAt={cell.createdAt}
               updatedAt={cell.updatedAt}
+              GroupMembers={cell.GroupMembers || []}
               onEdit={handleEdit}
               onDelete={handleDelete}
               loading={loading}
@@ -227,6 +232,7 @@ export const CellsPage: React.FC = () => {
               dateLabel={group.dateLabel}
               createdAt={group.createdAt}
               updatedAt={group.updatedAt}
+              GroupMembers={group.GroupMembers || []}
               onEdit={handleEdit}
               onDelete={handleDelete}
               loading={loading}
