@@ -83,7 +83,11 @@ export const CellsCard = ({
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const [usersAll, setUsers] = useState<Users[]>([]);
 
+    const [groupMembers, setGroupMembers] = useState<Users[]>([]);
+
     const [presences, setPresences] = useState([]);
+
+    const [reports, setReports] = useState([]);
 
     const {
         register,
@@ -112,9 +116,9 @@ export const CellsCard = ({
 
             reportsData.amount = parseFloat(data.amount.toString()) || 0;
 
-            console.log(reportsData);
             if (editingReports) {
-                await api.put(`/group/${editingReports.id}`, reportsData);
+                console.log(reportsData);
+                await api.put(`/group/update-report/${editingReports.id}`, reportsData);
             } else {
                 await api.post("/group/add-report", reportsData);
             }
@@ -146,6 +150,11 @@ export const CellsCard = ({
             try {
                 const response = await api.get("/user");
                 setUsers(response.data.users);
+                // Assuming the user has a property named GroupMember containing the list of group memberships
+                const groupMembers = response.data.users.filter(user => user.GroupMember.length > 0);
+                setGroupMembers(groupMembers);
+                console.log(groupMembers)
+
             } catch (error) {
                 console.error("Error fetching users:", error);
             }
@@ -157,17 +166,41 @@ export const CellsCard = ({
     const fetchPresences = async () => {
         try {
             console.log(id);
-            const response = await api.get(`/group/list-presence?groupId=${id}`);
-            console.log(response)
+            // /group/list-precensa?groupId=d07e6638-6f53-46db-8ce4-c2c3a2dc463f'
+            const response = await api.get(`/group/list-precensa?groupId=${id}`);
             setPresences(response.data.presences);
         } catch (error) {
             console.error("Error fetching presences:", error);
         }
     };
 
+    const fetchReports = async () => {
+        try {
+            // group/list-report?groupId=d07e6638-6f53-46db-8ce4-c2c3a2dc463f
+            const response = await api.get(`/group/list-report?groupId=${id}`);
+            setReports(response.data.data);
+        } catch (error) {
+            console.error("Error fetching reports:", error);
+        }
+    };
+
+    const handleEditReport = (report: ReportsData) => {
+        setEditingReports(report);
+        setValue("dateLabel", report.dateLabel);
+        setValue("groupId", report.groupId);
+
+        const amountValue = parseFloat(report.amount);
+        setValue("amount", isNaN(amountValue) ? 0 : amountValue);
+
+        setValue("address", report.address);
+        setValue("obs", report.obs);
+        setIsModalOpen(true);
+    };
+
     const handleModalOpen = () => {
         setModalOpen(true);
         fetchPresences();
+        fetchReports();
     };
 
     const handleSubscribe = async (CellId: String) => {
@@ -187,12 +220,12 @@ export const CellsCard = ({
         }
     };
 
-    const handleRemoveMember = async (groupId: string) => {
+    const handleRemoveMember = async (groupId: string, memberId: string) => {
         try {
-            if(selectedUserId) {
-                await api.put(`/group/remove-member/${groupId}/${selectedUserId}`);
+            if (memberId) {
+                await api.put(`/group/remove-member/${groupId}/${memberId}`);
                 toast.success("Participante removido com sucesso");
-            }else {
+            } else {
                 toast.error("Participante não selecionado");
             }
         } catch (error) {
@@ -209,8 +242,6 @@ export const CellsCard = ({
                 isVisitor: Boolean(data.isVisitor),
             };
 
-            console.log(presenceData);
-
             await api.post("/group/add-presence", presenceData);
 
             setIsModalOpen(false);
@@ -220,6 +251,17 @@ export const CellsCard = ({
             toast.error("Erro ao adicionar presença: " + error);
         } finally {
             // You may want to invalidate some queries here if needed
+        }
+    };
+
+    const handleDeletePresence = async (presenceId: string) => {
+        try {
+            await api.put(`/group/remove-presence/${presenceId}`);
+            toast.success("Presença removida com sucesso");
+            // Atualizar as presenças após a exclusão
+            fetchPresences();
+        } catch (error) {
+            toast.error("Não foi possível remover a Presença" + error);
         }
     };
 
@@ -267,6 +309,18 @@ export const CellsCard = ({
                     <span>{address}</span>
                     <p>Criado em: {formatDate(createdAt)}</p>
                     <p>Atualizado em: {formatDate(updatedAt)}</p>
+                    <h2>Lista de Membros do Grupo</h2>
+                    <ul>
+                        {groupMembers.map((member) => (
+                            <li key={member.id}>
+                                <p>{member.name}</p>
+                                <p>Email: {member.email}</p>
+                                <button type="button" onClick={() => handleRemoveMember(id, member.id)}>
+                                    Remover do Grupo
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
                     <select
                         name="selectedUserId"
                         onChange={(e) => setSelectedUserId(e.target.value)}
@@ -286,30 +340,49 @@ export const CellsCard = ({
                         Inscrever Participante
                     </button>
 
-                    <button
-                        type="button"
-                        onClick={() => handleRemoveMember(String(id))}
-                    >
-                        Remover Participante
-                    </button>
+                    <h2>Presenças</h2>
                     <Button variant="default" onClick={() => setIsModalPresenceOpen(true)}>
                         Adicionar Presenca
                     </Button>
-
-                    <h2>Presenças</h2>
                     {presences.length > 0 ? (
                         <ul>
                             {presences.map((presence) => (
                                 <li key={presence.id}>
-                                    <span>{presence.user.name}</span>
-                                    <span>Data: {presence.dateLabel}</span>
-                                    <span>Aceitou Jesus: {presence.isAcceptedJesus ? 'Sim' : 'Não'}</span>
-                                    <span>Visitante: {presence.isVisitor ? 'Sim' : 'Não'}</span>
+                                    <p>{presence.member.name}</p>
+                                    <p>Data: {presence.dateLabel}</p>
+                                    <p>Aceitou Jesus: {presence.isAcceptedJesus ? 'Sim' : 'Não'}</p>
+                                    <p>Visitante: {presence.isVisitor ? 'Sim' : 'Não'}</p>
+                                    <Button variant="delete" onClick={() => handleDeletePresence(presence.id)}>
+                                        Excluir
+                                    </Button>
                                 </li>
                             ))}
                         </ul>
                     ) : (
                         <p>Nenhuma presença registrada ainda.</p>
+                    )}
+
+                    <h2>Relatórios</h2>
+                    {reports.length > 0 ? (
+                        <ul>
+                            {reports.map((report) => (
+                                <li key={report.id}>
+                                    <p>Data: {report.dateLabel}</p>
+                                    <p>Endereço: {report.address}</p>
+                                    <p>Quantidade de Pessoas Prevista: {report.amount}</p>
+                                    <p>Quantidade de Convertidos:: {report.qtdAcceptedJesus}</p>
+                                    <p>Quantidade de Mulheres Presentes: {report.qtdFemalePresence}</p>
+                                    <p>Quantidade de Homens Presentes: {report.qtdMalePresence}</p>
+                                    <p>Quantidade Total de Presentes: {report.qtdPresence}</p>
+                                    <p>Quantidade de Visitantes: {report.qtdVisitor}</p>
+                                    <Button variant="edit" onClick={() => handleEditReport(report)}>
+                                        Editar
+                                    </Button>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p>Nenhum relatório registrado ainda.</p>
                     )}
                 </Modal>
 
