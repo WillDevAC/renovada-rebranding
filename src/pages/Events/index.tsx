@@ -111,9 +111,6 @@ export const EventsPage = () => {
         isHighlighted: Boolean(data.isHighlighted),
       };
 
-      // eventsData.isRequiredSubscription = data.isRequiredSubscription;
-      // eventsData.isHighlighted = data.isHighlighted;
-
       eventsData.price = parseFloat(data.price.toString()) || 0;
       eventsData.maxRegistered = parseFloat(data.maxRegistered.toString()) || 0;
       console.log(eventsData);
@@ -128,7 +125,13 @@ export const EventsPage = () => {
       setIsModalOpen(false);
       toast.success("Evento Cadastrado");
     } catch (error) {
-      toast.error("Erro ao cadastrar evento:" + error);
+      let errorMessage = "Erro ao cadastrar evento";
+
+      if (error.response && error.response.data && error.response.data.message) {
+        errorMessage += `: ${error.response.data.message}`;
+      }
+
+      toast.error(errorMessage);
     }
   };
 
@@ -164,7 +167,13 @@ export const EventsPage = () => {
 
       toast.success("Evento excluido com sucesso!");
     } catch (error) {
-      toast.error("Erro ao excluir Evento:" + error);
+      let errorMessage = "Não foi possível excluir evento";
+
+      if (error.response && error.response.data && error.response.data.message) {
+        errorMessage += `: ${error.response.data.message}`;
+      }
+
+      toast.error(errorMessage);
     }
   };
 

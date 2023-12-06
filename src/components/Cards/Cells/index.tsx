@@ -152,7 +152,14 @@ export const CellsCard = ({
 
       reset();
     } catch (error) {
-      toast.error("Erro ao cadastrar/editar Relatório: " + error);
+      let errorMessage = "Não foi possível cadastrar/editar relatório";
+
+      // Verifica se há uma mensagem de erro específica na resposta da API
+      if (error.response && error.response.data && error.response.data.message) {
+        errorMessage += `: ${error.response.data.message}`;
+      }
+
+      toast.error(errorMessage);
     } finally {
       queryClient.invalidateQueries("getCellsList");
       fetchReports();
@@ -175,7 +182,13 @@ export const CellsCard = ({
       const response = await api.get("/user");
       setUsers(response.data.users);
     } catch (error) {
-      toast.error("Error ao buscar usuários:" + error);
+      let errorMessage = "Erro ao buscar usuários";
+
+      if (error.response && error.response.data && error.response.data.message) {
+        errorMessage += `: ${error.response.data.message}`;
+      }
+
+      toast.error(errorMessage);
     } finally {
       setCompLoading(false);
     }
@@ -187,8 +200,14 @@ export const CellsCard = ({
       const response = await api.get(`/group/list-precensa?groupId=${id}`);
       setPresences(response.data.presences);
     } catch (error) {
-      toast.error("Error ao carregar as presenças:" + error);
-    } finally {
+      let errorMessage = "Erro ao carregar presenças";
+
+      if (error.response && error.response.data && error.response.data.message) {
+        errorMessage += `: ${error.response.data.message}`;
+      }
+
+      toast.error(errorMessage);
+    }finally {
       setCompLoading(false);
     }
   };
@@ -199,7 +218,13 @@ export const CellsCard = ({
       const response = await api.get(`/group/list-report?groupId=${id}`);
       setReports(response.data.data);
     } catch (error) {
-      toast.error("Error fetching reports:" + error);
+      let errorMessage = "Não foi possível carregar relatórios";
+
+      if (error.response && error.response.data && error.response.data.message) {
+        errorMessage += `: ${error.response.data.message}`;
+      }
+
+      toast.error(errorMessage);
     } finally {
       setCompLoading(false);
     }
@@ -237,8 +262,14 @@ export const CellsCard = ({
         toast.error("Participante não selecionado");
       }
     } catch (error) {
-      toast.error("Não foi possível adicionar participante" + error);
-    } finally {
+      let errorMessage = "Não foi possível adicionar participante";
+
+      if (error.response && error.response.data && error.response.data.message) {
+        errorMessage += `: ${error.response.data.message}`;
+      }
+
+      toast.error(errorMessage);
+    }finally {
       GET_CELLS_LIST();
       setCompLoading(false);
     }
@@ -254,9 +285,13 @@ export const CellsCard = ({
         toast.error("Participante não selecionado");
         setCompLoading(false);
       }
-    } catch (error) {
-      toast.error("Não foi possível remover o participante" + error);
-    } finally {
+    }  catch (error) {
+      let errorMessage = "Não foi possível remover participante";
+
+      if (error.response && error.response.data && error.response.data.message) {
+        errorMessage += `: ${error.response.data.message}`;
+      }
+      } finally {
       GET_CELLS_LIST();
       setCompLoading(false);
     }
@@ -277,8 +312,14 @@ export const CellsCard = ({
       toast.success("Presença adicionada com sucesso!");
       resetPresence();
     } catch (error) {
-      toast.error("Erro ao adicionar presença: " + error);
-    } finally {
+      let errorMessage = "Não foi possível adicionar presença";
+
+      if (error.response && error.response.data && error.response.data.message) {
+        errorMessage += `: ${error.response.data.message}`;
+      }
+
+      toast.error(errorMessage);
+    }finally {
       fetchPresences();
       setCompLoading(false);
     }
@@ -292,7 +333,13 @@ export const CellsCard = ({
 
       fetchPresences();
     } catch (error) {
-      toast.error("Não foi possível remover a Presença" + error);
+      let errorMessage = "Não foi possível remover presença";
+
+      if (error.response && error.response.data && error.response.data.message) {
+        errorMessage += `: ${error.response.data.message}`;
+      }
+
+      toast.error(errorMessage);
     } finally {
       fetchPresences();
       setCompLoading(false);
@@ -466,8 +513,9 @@ export const CellsCard = ({
                       />
                       <input type="hidden" name="groupId" value={id} />
                       <label>
-                        Data e Hora:
+                        Data:
                         <Input
+                            placeholder="xx/xx/xxxx"
                           {...register("dateLabel", {
                             required: "Este campo é obrigatório",
                           })}
@@ -586,9 +634,10 @@ export const CellsCard = ({
                         })}
                       />
                       <label>
-                        Data e Hora:
+                        Data :
                         <Input
-                          {...registerPresence("dateLabel", {
+                            placeholder="xx/xx/xxxx"
+                            {...registerPresence("dateLabel", {
                             required: "Este campo é obrigatório",
                           })}
                         />

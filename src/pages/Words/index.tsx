@@ -91,7 +91,13 @@ export const WordsPage: React.FC = () => {
                 const response = await api.get("/wordSermon/categories");
                 setCategories(response.data.categories);
             } catch (error) {
-                console.error("Erro ao buscar categorias:", error);
+                let errorMessage = "Não foi possível buscar categorias";
+
+                if (error.response && error.response.data && error.response.data.message) {
+                    errorMessage += `: ${error.response.data.message}`;
+                }
+
+                toast.error(errorMessage);
             }
         };
 
@@ -142,9 +148,15 @@ export const WordsPage: React.FC = () => {
             reset();
 
             reset();
-        } catch (error) {
-            toast.error("Erro ao cadastrar/editar Sermão: " + error);
-        } finally {
+        }  catch (error) {
+            let errorMessage = "Erro ao cadastrar/editar sermões";
+
+            if (error.response && error.response.data && error.response.data.message) {
+                errorMessage += `: ${error.response.data.message}`;
+            }
+
+            toast.error(errorMessage);
+        }finally {
             queryClient.invalidateQueries("getEventList");
             setLoading(false);
         }
@@ -181,8 +193,14 @@ export const WordsPage: React.FC = () => {
 
             toast.success("Sermão excluido com sucesso!");
         } catch (error) {
-            toast.error("Erro ao excluir Sermão:" + error);
-        } finally {
+            let errorMessage = "Erro ao excluir sermão";
+
+            if (error.response && error.response.data && error.response.data.message) {
+                errorMessage += `: ${error.response.data.message}`;
+            }
+
+            toast.error(errorMessage);
+        }finally {
             queryClient.invalidateQueries("getWordList");
             setLoading(false);
         }
