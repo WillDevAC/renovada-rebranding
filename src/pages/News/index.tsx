@@ -14,6 +14,7 @@ import { BeatLoader } from "react-spinners";
 import * as S from "./styles";
 import api from "../../services/api";
 import { toast } from "react-toastify";
+import {MagnifyingGlass} from "@phosphor-icons/react";
 
 interface FormData {
   title: string;
@@ -52,6 +53,8 @@ export const NewsPage: React.FC = () => {
   const [listNews, setListNews] = useState<NewsData[] | null>(null);
 
   const [loading, setLoading] = useState(false);
+
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   const {
     register,
@@ -128,13 +131,24 @@ export const NewsPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
+  // const GET_NEWS_LIST = async () => {
+  //   const response = await api.get<{ news: NewsData[] }>("/news");
+  //   setListNews(response.data.news);
+  //   return response.data.news;
+
+
   const GET_NEWS_LIST = async () => {
-    const response = await api.get<{ news: NewsData[] }>("/news");
+    const response = await api.get(`/news`, {params: {searchQuery }});
     setListNews(response.data.news);
     return response.data.news;
   };
 
-  const { data, isLoading } = useQuery("getEventList", GET_NEWS_LIST);
+  const { data, isLoading } = useQuery(["getEventList", searchQuery], GET_NEWS_LIST);
+
+  const filteredData =
+      data?.filter((news: NewsData) =>
+          news.title.toLowerCase().includes(searchQuery.toLowerCase())
+      ) || [];
 
   const handleDelete = async (id: string) => {
     setLoading(true);
@@ -154,6 +168,22 @@ export const NewsPage: React.FC = () => {
     <Layout>
       <S.ActionsNews>
         <h1>Notícias</h1>
+        <S.ContainerFilter>
+          <label>
+            Buscar Notícia:
+            <Input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </label>
+
+          <div>
+            <Button variant="default" onClick={() => queryClient.invalidateQueries("getEventList")}>
+              <MagnifyingGlass size={18} />
+            </Button>
+          </div>
+        </S.ContainerFilter>
         <S.Actions>
           <Button variant="default" onClick={() => setIsModalOpen(true)}>
             Cadastrar notícia
@@ -168,9 +198,9 @@ export const NewsPage: React.FC = () => {
         )}
 
         {!isLoading &&
-          data &&
-          data.length > 0 &&
-          data.map((event: NewsData) => (
+            data &&
+            filteredData.length > 0 &&
+            filteredData.map((event: NewsData) => (
             <NewsCard
               key={event.id}
               title={event.title}
