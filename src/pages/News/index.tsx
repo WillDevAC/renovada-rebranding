@@ -114,9 +114,15 @@ export const NewsPage: React.FC = () => {
       reset();
 
       reset();
-    } catch (error) {
-      toast.error("Erro ao cadastrar/editar notícia: " + error);
-    } finally {
+    } catch (error: any) {
+      let errorMessage = "Erro ao cadastrar/editar notícias";
+
+      if (error.response.data.message) {
+        errorMessage += `: ${error.response.data.message}`;
+      }
+
+      toast.error(errorMessage);
+    }finally {
       queryClient.invalidateQueries("getEventList");
       setLoading(false);
     }
@@ -130,12 +136,6 @@ export const NewsPage: React.FC = () => {
     setValue("videoUrl", news.videoUrl);
     setIsModalOpen(true);
   };
-
-  // const GET_NEWS_LIST = async () => {
-  //   const response = await api.get<{ news: NewsData[] }>("/news");
-  //   setListNews(response.data.news);
-  //   return response.data.news;
-
 
   const GET_NEWS_LIST = async () => {
     const response = await api.get(`/news`, {params: {searchQuery }});
@@ -156,9 +156,15 @@ export const NewsPage: React.FC = () => {
       await api.delete(`/news/${id}`);
 
       toast.success("Notícia excluida com sucesso!");
-    } catch (error) {
-      toast.error("Erro ao excluir notícia:" + error);
-    } finally {
+    } catch (error: any) {
+      let errorMessage = "Erro ao excluir notícia";
+
+      if (error.response.data.message) {
+        errorMessage += `: ${error.response.data.message}`;
+      }
+
+      toast.error(errorMessage);
+    }finally {
       queryClient.invalidateQueries("getEventList");
       setLoading(false);
     }

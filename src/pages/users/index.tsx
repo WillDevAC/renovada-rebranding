@@ -170,8 +170,14 @@ export const UsersPage: React.FC = () => {
 
       handleCloseModal();
       fetchData();
-    } catch (error) {
-      toast.error("Error em salvar user:" + error);
+    } catch (error: any) {
+      let errorMessage = "Erro ao salvar usuário";
+
+      if (error.response.data.message) {
+        errorMessage += `: ${error.response.data.message}`;
+      }
+
+      toast.error(errorMessage);
     }
   };
   const deleteUser = async (id: string) => {
@@ -179,8 +185,14 @@ export const UsersPage: React.FC = () => {
       await api.delete(`user/${id}`);
       toast.success("Usuário deletado com sucesso!");
       fetchData();
-    } catch (err) {
-      toast.error("Ocorreu um erro ao deletar o usuário. Motivo:" + err);
+    } catch (error: any) {
+      let errorMessage = "Erro ao deletar usuário";
+
+      if (error.response.data.message) {
+        errorMessage += `: ${error.response.data.message}`;
+      }
+
+      toast.error(errorMessage);
     }
   };
 

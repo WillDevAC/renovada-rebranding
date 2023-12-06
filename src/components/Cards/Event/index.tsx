@@ -5,7 +5,6 @@ import api from "../../../services/api.ts";
 
 import * as S from "./styles";
 import { toast } from "react-toastify";
-import styled from "styled-components";
 
 interface IEventCard {
   image: string | null;
@@ -34,14 +33,6 @@ interface Users {
   name: string;
   email: string;
 }
-
-const SubscribersList = styled.div`
-  background: #616161;
-  max-height: 200px;
-  overflow-y: auto;
-  padding: 10px;
-  margin-bottom: 5px;
-`;
 
 export const EventCard: React.FC<IEventCard> = ({
   id,
@@ -73,18 +64,24 @@ export const EventCard: React.FC<IEventCard> = ({
       try {
         const response = await api.get("/user");
         setUsers(response.data.users);
-      } catch (error) {
-        console.error("Error fetching users:", error);
+      } catch (error: any) {
+        let errorMessage = "Erro ao buscar eventos";
+
+        if (error.response.data.message) {
+          errorMessage += `: ${error.response.data.message}`;
+        }
+
+        toast.error(errorMessage);
       }
     };
 
     fetchUsers();
   }, []);
 
-  const handleSubscribe = async (EventId: number) => {
+  const handleSubscribe = async (EventId: string) => {
     try {
       if (selectedUserId) {
-        await api.post(`/event/add-subscriber/${selectedUserId}/${EventId}`);
+        await api.post(`/event/add-subscriber-with-cash-pay/${selectedUserId}/${EventId}`);
 
         setSelectedUserId(null);
 
@@ -92,8 +89,14 @@ export const EventCard: React.FC<IEventCard> = ({
       } else {
         toast.error("Participante não selecionado");
       }
-    } catch (error) {
-      toast.error("Não foi possível adicionar participante" + error);
+    } catch (error: any) {
+      let errorMessage = "Não foi possível adicionar participante";
+
+      if (error.response.data.message) {
+        errorMessage += `: ${error.response.data.message}`;
+      }
+
+      toast.error(errorMessage);
     }
   };
 
@@ -160,45 +163,50 @@ export const EventCard: React.FC<IEventCard> = ({
             </S.CardVideo>
           )}
           <p>{labelDate}</p>
-          <h3 className="mt-5">Participantes</h3>
-          <SubscribersList className="subscribers-list">
-            {Array.isArray(SubscribersEvent) && SubscribersEvent.length > 0 ? (
-              SubscribersEvent.map((subscriber: any) => (
-                <div
-                  style={{ display: "flex", flexDirection: "row", gap: "10px" }}
+
+            <h2>Lista de inscritos do Evento:</h2>
+            <S.AddParticipant>
+              <S.ModalSelect
+                  name="selectedUserId"
+                  onChange={(e) => setSelectedUserId(e.target.value)}
+                  value={selectedUserId || ""}
+                  required
+              >
+                <option value="" disabled hidden>
+                  Escolha um participante
+                </option>
+                {usersAll?.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.name} - {user.email}
+                    </option>
+                ))}
+              </S.ModalSelect>
+              <S.ModalButtons>
+                <S.ModalButton
+                    type="button"
+                    onClick={() => handleSubscribe(String(id))}
                 >
-                  <div style={{ flex: 1 }}>
-                    <p>{subscriber.user.name}</p>
-                  </div>
-
-                  <div style={{ flex: 1 }}>
-                    <p>{subscriber.user.email}</p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <h3>Nenhum participante cadastrado para esse evento</h3>
-            )}
-          </SubscribersList>
-
-          <select
-            name="selectedUserId"
-            onChange={(e) => setSelectedUserId(e.target.value)}
-            value={selectedUserId || ""}
-            required
-          >
-            <option value="" disabled hidden>
-              Escolha um participante
-            </option>
-            {usersAll?.map((user: Users) => (
-              <option key={user.id} value={user.id}>
-                {user.name} - {user.email}
-              </option>
-            ))}
-          </select>
-          <button type="button" onClick={() => handleSubscribe(Number(id))}>
-            Inscrever Participante
-          </button>
+                  Inscrever Participante
+                </S.ModalButton>
+              </S.ModalButtons>
+            </S.AddParticipant>
+            <S.Table>
+              <tbody>
+              {Array.isArray(SubscribersEvent) &&
+              SubscribersEvent.length > 0 ? (
+                  SubscribersEvent.map((subscriber: any) => (
+                      <tr key={subscriber.user.id}>
+                        <td>{subscriber.user.name}</td>
+                        <td>{subscriber.user.email}</td>
+                      </tr>
+                  ))
+              ) : (
+                  <h3>
+                    Nenhum participante cadastrado para esse grupo
+                  </h3>
+              )}
+              </tbody>
+            </S.Table>
         </Modal>
       </S.CardEvent>
     </>
