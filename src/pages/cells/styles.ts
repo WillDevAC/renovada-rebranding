@@ -36,9 +36,9 @@ display: flex;
   background-color: ${input_background};
    width: 100%;
    margin-bottom: 20px;
-`
+`;
 export const ContainerFilter = styled.div`
   display: flex;  
   align-items: center;
   gap: 8px;
-`;
+`

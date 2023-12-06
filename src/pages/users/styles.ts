@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import { border_rounded, input_background } from "../../styles/variables";
 
-export const ActionsNews = styled.div`
+export const ActionsUsers = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -12,7 +12,7 @@ export const Actions = styled.div `
     width: 10rem;
 `;
 
-export const NewsWrapper = styled.section `
+export const UsersWrapper = styled.section `
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
     margin-top: 2rem;
@@ -36,9 +36,5 @@ display: flex;
   background-color: ${input_background};
    width: 100%;
    margin-bottom: 20px;
-`
-export const ContainerFilter = styled.div`
-  display: flex;  
-  align-items: center;
-  gap: 8px;
 `;
+

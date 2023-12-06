@@ -3,11 +3,19 @@ import * as S from "./styles";
 import { useAuthStore } from "../../stores/auth.store";
 import { Navigate } from "react-router-dom";
 
-import { Globe, House, Quotes, SignOut, Ticket, Article  } from "@phosphor-icons/react";
+import {
+  Globe,
+  House,
+  Quotes,
+  SignOut,
+  Ticket,
+  Article,
+  Users,
+} from "@phosphor-icons/react";
 
 export const Sidebar = () => {
   const navigate = useNavigate();
-   const authStore = useAuthStore();
+  const authStore = useAuthStore();
 
   const handleLogout = () => {
     authStore.logout();
@@ -28,6 +36,10 @@ export const Sidebar = () => {
           <Quotes size={25} />
           <S.OptionTitle>Palavras</S.OptionTitle>
         </S.Option>
+        <S.Option onClick={() => navigate("/users")}>
+          <Users size={25} />
+          <S.OptionTitle>Usuários</S.OptionTitle>
+        </S.Option>
         <S.Option onClick={() => navigate("/cells")}>
           <Globe size={25} />
           <S.OptionTitle>Células</S.OptionTitle>
@@ -37,7 +49,7 @@ export const Sidebar = () => {
           <S.OptionTitle>Eventos</S.OptionTitle>
         </S.Option>
         <S.Option onClick={() => navigate("/news")}>
-          <Article  size={25} />
+          <Article size={25} />
           <S.OptionTitle>Noticias</S.OptionTitle>
         </S.Option>
         <S.Option onClick={() => handleLogout()}>

@@ -16,6 +16,7 @@ import { Modal } from "../../components/Modal";
 import { toast } from "react-toastify";
 import { BeatLoader } from "react-spinners";
 import formatDate from "../../utils";
+import {MagnifyingGlass} from "@phosphor-icons/react";
 interface FormData {
   title: string;
   content: string;
@@ -66,6 +67,7 @@ export const EventsPage = () => {
   const [loading] = useState<boolean>(false);
   const [editingEvents, setEditingEvents] = useState<EventsData | null>(null);
   const [listEvents, setListEvents] = useState<EventsData[] | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   const {
     register,
@@ -148,12 +150,12 @@ export const EventsPage = () => {
   };
 
   const GET_EVENTS_LIST = async () => {
-    const response = await api.get(`/event`);
+    const response = await api.get(`/event`, { params: { searchQuery } });
     setListEvents(response.data.news);
     return response.data.events;
   };
 
-  const { data, isLoading } = useQuery("getEventList", GET_EVENTS_LIST);
+  const { data, isLoading } = useQuery(["getEventList", searchQuery], GET_EVENTS_LIST);
 
   const handleDelete = async (id: string) => {
     try {
@@ -166,10 +168,31 @@ export const EventsPage = () => {
     }
   };
 
+  const filteredData =
+      data?.filter((event: EventsData) =>
+          event.title.toLowerCase().includes(searchQuery.toLowerCase())
+      ) || [];
+
   return (
     <Layout>
       <S.ActionsEvents>
         <h1>Eventos</h1>
+        <S.ContainerFilter>
+          <label>
+            Buscar Evento:
+            <Input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </label>
+
+          <div>
+            <Button variant="default" onClick={() => queryClient.invalidateQueries("getEventList")}>
+              <MagnifyingGlass size={18} />
+            </Button>
+          </div>
+        </S.ContainerFilter>
         <S.Actions>
           <Button variant="default" onClick={() => setIsModalOpen(true)}>
             Cadastrar evento
@@ -183,38 +206,35 @@ export const EventsPage = () => {
           <span>Não há eventos cadastrados.</span>
         )}
 
-        {!isLoading ? (
-          data?.length > 0 ? (
-            data.map((event: EventsData) => (
-              <EventCardComponent
-                key={event.id}
-                title={event.title}
-                date={event.date}
-                labelDate={event.labelDate}
-                address={event.address}
-                isRequiredSubscription={event.isRequiredSubscription}
-                maxRegistered={event.maxRegistered}
-                isHighlighted={event.isHighlighted}
-                image={event.img?.url || null}
-                id={event.id}
-                videoUrl={event.videoUrl}
-                price={event.price}
-                content={event.content}
-                createdAt={event.createdAt}
-                SubscribersEvent={event.SubscribersEvent || []}
-                updatedAt={event.updatedAt}
-                subscribers={event.subscribers}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            ))
-          ) : (
-            <span>Não há eventos cadastrados.</span>
-          )
-        ) : null}
+        {!isLoading &&
+            filteredData.length > 0 &&
+            filteredData.map((event: EventsData) => (
+          <EventCardComponent
+            key={event.id}
+            title={event.title}
+            date={event.date}
+            labelDate={event.labelDate}
+            address={event.address}
+            isRequiredSubscription={event.isRequiredSubscription}
+            maxRegistered={event.maxRegistered}
+            isHighlighted={event.isHighlighted}
+            image={event.img?.url || null}
+            id={event.id}
+            videoUrl={event.videoUrl}
+            price={event.price}
+            content={event.content}
+            createdAt={event.createdAt}
+            SubscribersEvent={event.SubscribersEvent || []}
+            updatedAt={event.updatedAt}
+            subscribers={event.subscribers} 
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+                ))}
+
       </S.EventsWrapper>
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        <h2>Cadastrar/editar eventos</h2>
+        <h2>Cadastrar notícias</h2>
         <form onSubmit={handleSubmit(onSubmit)}>
           <label>
             Título:
