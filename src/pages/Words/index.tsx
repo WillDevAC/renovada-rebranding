@@ -15,6 +15,7 @@ import * as S from "./styles";
 import api from "../../services/api";
 import { toast } from "react-toastify";
 import Select from "../../components/Select";
+import {MagnifyingGlass} from "@phosphor-icons/react";
 
 interface FormData {
     title: string;
@@ -65,6 +66,8 @@ export const WordsPage: React.FC = () => {
     const [categories, setCategories] = useState<Category[]>([]);
 
     const [loading, setLoading] = useState(false);
+
+    const [searchQuery, setSearchQuery] = useState<string>("");
 
     const {
         register,
@@ -159,12 +162,17 @@ export const WordsPage: React.FC = () => {
     };
 
     const GET_WORDS_LIST = async () => {
-        const response = await api.get(`/wordSermon`);
+        const response = await api.get(`/wordSermon`, {params: {searchQuery }});
         setListWords(response.data.wordSermons);
         return response.data.wordSermons;
     };
 
-    const { data, isLoading } = useQuery("getWordList", GET_WORDS_LIST);
+    const { data, isLoading } = useQuery(["getWordList", searchQuery], GET_WORDS_LIST);
+
+    const filteredData =
+        data?.filter((word: WordsData) =>
+            word.title.toLowerCase().includes(searchQuery.toLowerCase())
+        ) || [];
 
     const handleDelete = async (id: string) => {
         setLoading(true);
@@ -184,6 +192,22 @@ export const WordsPage: React.FC = () => {
         <Layout>
             <S.ActionsNews>
                 <h1>Palavras</h1>
+                <S.ContainerFilter>
+                    <label>
+                        Buscar Sermão:
+                        <Input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </label>
+
+                    <div>
+                        <Button variant="default" onClick={() => queryClient.invalidateQueries("getWordsList")}>
+                            <MagnifyingGlass size={18} />
+                        </Button>
+                    </div>
+                </S.ContainerFilter>
                 <S.Actions>
                     <Button variant="default" onClick={() => setIsModalOpen(true)}>
                         Cadastrar Sermão
@@ -199,8 +223,8 @@ export const WordsPage: React.FC = () => {
 
                 {!isLoading &&
                     data &&
-                    data.length > 0 &&
-                    data.map((word: WordsData) => (
+                    filteredData.length > 0 &&
+                    filteredData.map((word: WordsData) => (
                         <WordsCard
                             key={word.id}
                             title={word.title}
