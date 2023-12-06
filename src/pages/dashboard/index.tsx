@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 import api from "../../services/api.ts";
 import { Button } from "../../components/Button";
 import { Modal } from "../../components/Modal";
+import * as S from "../../components/Cards/Cells/styles.ts";
 
 
 
@@ -259,31 +260,33 @@ export const DashboardPage = () => {
                 <Typography variant="h5">
                   Relatório De {selectedReportData.group.name}
                 </Typography>
-                <Typography>{selectedReportData.dateLabel}</Typography>
-                <Typography>{selectedReportData.address}</Typography>
-                <Typography>Observações: {selectedReportData.obs}</Typography>
-                <Typography>
-                  Quantidade de Participantes: {selectedReportData.amount}
-                </Typography>
-                <Typography>
-                  Quantidade de Convertidos:{" "}
-                  {selectedReportData.qtdAcceptedJesus}
-                </Typography>
-                <Typography>
-                  Quantidade de Visitantes: {selectedReportData.qtdVisitor}
-                </Typography>
-                <Typography>
-                  Quantidade Total de Presentes:{" "}
-                  {selectedReportData.qtdPresence}
-                </Typography>
-                <Typography>
-                  Quantidade de Homens Presentes:{" "}
-                  {selectedReportData.qtdMalePresence}
-                </Typography>
-                <Typography>
-                  Quantidade de Mulheres Presentes:{" "}
-                  {selectedReportData.qtdFemalePresence}
-                </Typography>
+
+                <S.ModalReportsList>
+                      <li >
+                        <p>Data: {selectedReportData.dateLabel}</p>
+                        <p>Endereço: {selectedReportData.address}</p>
+                        <p>
+                          Quantidade de Pessoas Prevista: {selectedReportData.amount}
+                        </p>
+                        <p>
+                          Quantidade de Convertidos:{" "}
+                          {selectedReportData.qtdAcceptedJesus}
+                        </p>
+                        <p>
+                          Quantidade de Mulheres Presentes:{" "}
+                          {selectedReportData.qtdFemalePresence}
+                        </p>
+                        <p>
+                          Quantidade de Homens Presentes:{" "}
+                          {selectedReportData.qtdMalePresence}
+                        </p>
+                        <p>
+                          Quantidade Total de Presentes:{" "}
+                          {selectedReportData.qtdPresence}
+                        </p>
+                        <p>Quantidade de Visitantes: {selectedReportData.qtdVisitor}</p>
+                      </li>
+                </S.ModalReportsList>
               </>
             )}
           </Modal>
