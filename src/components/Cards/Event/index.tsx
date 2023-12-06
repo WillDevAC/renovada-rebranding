@@ -5,8 +5,6 @@ import api from "../../../services/api.ts";
 
 import * as S from "./styles";
 import { toast } from "react-toastify";
-import styled from "styled-components";
-import {Trash} from "@phosphor-icons/react";
 
 interface IEventCard {
   image: string | null;
@@ -35,14 +33,6 @@ interface Users {
   name: string;
   email: string;
 }
-
-const SubscribersList = styled.div`
-  background: #616161;
-  max-height: 200px;
-  overflow-y: auto;
-  padding: 10px;
-  margin-bottom: 5px;
-`;
 
 export const EventCard: React.FC<IEventCard> = ({
   id,
@@ -74,10 +64,10 @@ export const EventCard: React.FC<IEventCard> = ({
       try {
         const response = await api.get("/user");
         setUsers(response.data.users);
-      } catch (error) {
+      } catch (error: any) {
         let errorMessage = "Erro ao buscar eventos";
 
-        if (error.response && error.response.data && error.response.data.message) {
+        if (error.response.data.message) {
           errorMessage += `: ${error.response.data.message}`;
         }
 
@@ -99,10 +89,10 @@ export const EventCard: React.FC<IEventCard> = ({
       } else {
         toast.error("Participante não selecionado");
       }
-    } catch (error) {
+    } catch (error: any) {
       let errorMessage = "Não foi possível adicionar participante";
 
-      if (error.response && error.response.data && error.response.data.message) {
+      if (error.response.data.message) {
         errorMessage += `: ${error.response.data.message}`;
       }
 

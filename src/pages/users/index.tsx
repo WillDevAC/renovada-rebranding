@@ -170,10 +170,10 @@ export const UsersPage: React.FC = () => {
 
       handleCloseModal();
       fetchData();
-    } catch (error) {
+    } catch (error: any) {
       let errorMessage = "Erro ao salvar usuário";
 
-      if (error.response && error.response.data && error.response.data.message) {
+      if (error.response.data.message) {
         errorMessage += `: ${error.response.data.message}`;
       }
 
@@ -185,10 +185,10 @@ export const UsersPage: React.FC = () => {
       await api.delete(`user/${id}`);
       toast.success("Usuário deletado com sucesso!");
       fetchData();
-    } catch (error) {
+    } catch (error: any) {
       let errorMessage = "Erro ao deletar usuário";
 
-      if (error.response && error.response.data && error.response.data.message) {
+      if (error.response.data.message) {
         errorMessage += `: ${error.response.data.message}`;
       }
 

@@ -124,10 +124,10 @@ export const EventsPage = () => {
       await queryClient.refetchQueries("getEventList");
       setIsModalOpen(false);
       toast.success("Evento Cadastrado");
-    } catch (error) {
+    } catch (error: any) {
       let errorMessage = "Erro ao cadastrar evento";
 
-      if (error.response && error.response.data && error.response.data.message) {
+      if (error.response.data.message) {
         errorMessage += `: ${error.response.data.message}`;
       }
 
@@ -166,10 +166,10 @@ export const EventsPage = () => {
       await queryClient.refetchQueries("getEventList");
 
       toast.success("Evento excluido com sucesso!");
-    } catch (error) {
+    } catch (error: any) {
       let errorMessage = "Não foi possível excluir evento";
 
-      if (error.response && error.response.data && error.response.data.message) {
+      if (error.response.data.message) {
         errorMessage += `: ${error.response.data.message}`;
       }
 

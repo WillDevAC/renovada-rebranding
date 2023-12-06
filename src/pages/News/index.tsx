@@ -114,10 +114,10 @@ export const NewsPage: React.FC = () => {
       reset();
 
       reset();
-    } catch (error) {
+    } catch (error: any) {
       let errorMessage = "Erro ao cadastrar/editar notícias";
 
-      if (error.response && error.response.data && error.response.data.message) {
+      if (error.response.data.message) {
         errorMessage += `: ${error.response.data.message}`;
       }
 
@@ -156,10 +156,10 @@ export const NewsPage: React.FC = () => {
       await api.delete(`/news/${id}`);
 
       toast.success("Notícia excluida com sucesso!");
-    } catch (error) {
+    } catch (error: any) {
       let errorMessage = "Erro ao excluir notícia";
 
-      if (error.response && error.response.data && error.response.data.message) {
+      if (error.response.data.message) {
         errorMessage += `: ${error.response.data.message}`;
       }
 

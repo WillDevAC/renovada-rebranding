@@ -90,7 +90,7 @@ export const WordsPage: React.FC = () => {
             try {
                 const response = await api.get("/wordSermon/categories");
                 setCategories(response.data.categories);
-            } catch (error) {
+            } catch (error: any) {
                 let errorMessage = "Não foi possível buscar categorias";
 
                 if (error.response && error.response.data && error.response.data.message) {
@@ -148,7 +148,7 @@ export const WordsPage: React.FC = () => {
             reset();
 
             reset();
-        }  catch (error) {
+        } catch (error: any) {
             let errorMessage = "Erro ao cadastrar/editar sermões";
 
             if (error.response && error.response.data && error.response.data.message) {
@@ -192,7 +192,7 @@ export const WordsPage: React.FC = () => {
             await api.delete(`/wordSermon/${id}`);
 
             toast.success("Sermão excluido com sucesso!");
-        } catch (error) {
+        } catch (error: any) {
             let errorMessage = "Erro ao excluir sermão";
 
             if (error.response && error.response.data && error.response.data.message) {
