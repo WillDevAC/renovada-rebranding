@@ -16,8 +16,11 @@ import TextArea from "../../TextArea";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { QueryClient } from "react-query";
 import { Tabs, Tab } from "@mui/material";
+import Loading from "../../loading/index.tsx";
 
 import Select from "../../Select";
+
+import { Trash } from "@phosphor-icons/react";
 interface IEventCard {
   image: string | null;
   name: string;
@@ -29,6 +32,7 @@ interface IEventCard {
   GroupMembers: null | any;
   onDelete: (id: string) => void;
   onEdit: (event: any) => void;
+  GET_CELLS_LIST: () => void;
   loading: boolean;
 }
 
@@ -84,6 +88,7 @@ export const CellsCard = ({
   dateLabel,
   id,
   address,
+  GET_CELLS_LIST,
   GroupMembers,
   createdAt,
   updatedAt,
@@ -92,19 +97,19 @@ export const CellsCard = ({
   onEdit,
 }: IEventCard) => {
   const [modalOpen, setModalOpen] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [isModalPresenceOpen, setIsModalPresenceOpen] =
-    useState<boolean>(false);
+  // const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+
   const [editingReports, setEditingReports] = useState<ReportsData | null>(
     null
   );
   const [deleteClicked, setDeleteClicked] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [usersAll, setUsers] = useState<Users[]>([]);
-  const [groupMembers, setGroupMembers] = useState<Users[]>([]);
+
   const [presences, setPresences] = useState<PresenceFormData[]>([]);
   const [reports, setReports] = useState<ReportsData[]>([]);
   const [activeTab, setActiveTab] = useState<number>(0);
+  const [compLoading, setCompLoading] = useState<boolean>(true);
 
   const queryClient = new QueryClient();
 
@@ -125,6 +130,7 @@ export const CellsCard = ({
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     try {
+      setCompLoading(true);
       const reportsData = {
         ...data,
       };
@@ -137,7 +143,6 @@ export const CellsCard = ({
         await api.post("/group/add-report", reportsData);
       }
 
-      setIsModalOpen(false);
       toast.success(
         editingReports
           ? "Relatório editado com sucesso!"
@@ -150,6 +155,8 @@ export const CellsCard = ({
       toast.error("Erro ao cadastrar/editar Relatório: " + error);
     } finally {
       queryClient.invalidateQueries("getCellsList");
+      fetchReports();
+      setCompLoading(false);
     }
   };
 
@@ -160,38 +167,41 @@ export const CellsCard = ({
   };
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await api.get("/user");
-        setUsers(response.data.users);
-
-        // const groupMembers = response.data.users.filter(
-        //   (user: any) => user.GroupMember.length > 0
-        // );
-        // setGroupMembers(groupMembers);
-      } catch (error) {
-        toast.error("Error ao buscar usuários:" + error);
-      }
-    };
-
     fetchUsers();
   }, []);
+  const fetchUsers = async () => {
+    try {
+      setCompLoading(true);
+      const response = await api.get("/user");
+      setUsers(response.data.users);
+    } catch (error) {
+      toast.error("Error ao buscar usuários:" + error);
+    } finally {
+      setCompLoading(false);
+    }
+  };
 
   const fetchPresences = async () => {
     try {
+      setCompLoading(true);
       const response = await api.get(`/group/list-precensa?groupId=${id}`);
       setPresences(response.data.presences);
     } catch (error) {
       toast.error("Error ao carregar as presenças:" + error);
+    } finally {
+      setCompLoading(false);
     }
   };
 
   const fetchReports = async () => {
     try {
+      setCompLoading(true);
       const response = await api.get(`/group/list-report?groupId=${id}`);
       setReports(response.data.data);
     } catch (error) {
       toast.error("Error fetching reports:" + error);
+    } finally {
+      setCompLoading(false);
     }
   };
 
@@ -205,7 +215,6 @@ export const CellsCard = ({
 
     setValue("address", report.address);
     setValue("obs", report.obs);
-    setIsModalOpen(true);
   };
 
   const handleModalOpen = () => {
@@ -216,6 +225,7 @@ export const CellsCard = ({
 
   const handleSubscribe = async (CellId: string) => {
     try {
+      setCompLoading(true);
       if (selectedUserId) {
         await api.put(`/group/add-member/${CellId}/${selectedUserId}`);
 
@@ -223,28 +233,38 @@ export const CellsCard = ({
 
         toast.success("Participante adicionado com sucesso");
       } else {
+        setCompLoading(false);
         toast.error("Participante não selecionado");
       }
     } catch (error) {
       toast.error("Não foi possível adicionar participante" + error);
+    } finally {
+      GET_CELLS_LIST();
+      setCompLoading(false);
     }
   };
 
   const handleRemoveMember = async (groupId: string, memberId: string) => {
     try {
+      setCompLoading(true);
       if (memberId) {
         await api.put(`/group/remove-member/${groupId}/${memberId}`);
         toast.success("Participante removido com sucesso");
       } else {
         toast.error("Participante não selecionado");
+        setCompLoading(false);
       }
     } catch (error) {
       toast.error("Não foi possível remover o participante" + error);
+    } finally {
+      GET_CELLS_LIST();
+      setCompLoading(false);
     }
   };
 
   const onAddPresence: SubmitHandler<PresenceFormData> = async (data) => {
     try {
+      setCompLoading(true);
       const presenceData = {
         ...data,
         userId: selectedUserId,
@@ -254,417 +274,429 @@ export const CellsCard = ({
 
       await api.post("/group/add-presence", presenceData);
 
-      setIsModalOpen(false);
       toast.success("Presença adicionada com sucesso!");
       resetPresence();
     } catch (error) {
       toast.error("Erro ao adicionar presença: " + error);
     } finally {
-      // You may want to invalidate some queries here if needed
+      fetchPresences();
+      setCompLoading(false);
     }
   };
 
   const handleDeletePresence = async (presenceId: string) => {
     try {
+      setCompLoading(true);
       await api.put(`/group/remove-presence/${presenceId}`);
       toast.success("Presença removida com sucesso");
-      // Atualizar as presenças após a exclusão
+
       fetchPresences();
     } catch (error) {
       toast.error("Não foi possível remover a Presença" + error);
+    } finally {
+      fetchPresences();
+      setCompLoading(false);
     }
   };
 
   return (
     <>
-      <S.CardEvent>
-        <S.CardEventImageWrapper>
-          {image && <S.CardImage src={image} alt="Image Event" />}
-        </S.CardEventImageWrapper>
-        <S.CardEventDetails>
-          <h1>{name}</h1>
-          <span>{dateLabel}</span>
-          <span>{address}</span>
-        </S.CardEventDetails>
-        <S.CardEventActions>
-          <Button variant="view" onClick={() => handleModalOpen()}>
-            Visualizar
-          </Button>
+      {compLoading ? (
+        <Loading dark />
+      ) : (
+        <>
+          <S.CardEvent>
+            <S.CardEventImageWrapper>
+              {image && <S.CardImage src={image} alt="Image Event" />}
+            </S.CardEventImageWrapper>
+            <S.CardEventDetails>
+              <h1>{name}</h1>
+              <span>{dateLabel}</span>
+              <span>{address}</span>
+            </S.CardEventDetails>
+            <S.CardEventActions>
+              <Button variant="view" onClick={() => handleModalOpen()}>
+                Visualizar
+              </Button>
 
-          <Button
-            variant="edit"
-            onClick={() => onEdit({ id, name, dateLabel, address })}
-          >
-            Editar
-          </Button>
-          <Button
-            variant="delete"
-            onClick={handleDelete}
-            disabled={deleteClicked}
-          >
-            {loading && deleteClicked && (
-              <BeatLoader color={"#FFF"} size={10} />
-            )}
-            {!loading && !deleteClicked && "Excluir"}
-          </Button>
-          <Button variant="default" onClick={() => setIsModalOpen(true)}>
-            Cadastrar Relatório
-          </Button>
-        </S.CardEventActions>
-
-        <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}>
-          <S.ModalContainer>
-            <Tabs
-              value={activeTab}
-              onChange={(event, newValue) => setActiveTab(newValue)}
-              sx={{ borderBottom: 1, borderColor: "divider" }}
-            >
-              <Tab
-                label="Detalhes da célula"
-                sx={{
-                  textTransform: "none",
-                  fontWeight: "bold",
-                  color: "white",
-                }}
-              />
-              <Tab
-                label="Lista de Membros"
-                sx={{
-                  textTransform: "none",
-                  fontWeight: "bold",
-                  color: "white",
-                }}
-              />
-              <Tab
-                label="Relatórios"
-                sx={{
-                  textTransform: "none",
-                  fontWeight: "bold",
-                  color: "white",
-                }}
-              />
-              <Tab
-                label="Presenças"
-                sx={{
-                  textTransform: "none",
-                  fontWeight: "bold",
-                  color: "white",
-                }}
-              />
-            </Tabs>
-
-            {activeTab === 0 && (
-              <S.ModalHeader>
-                <h1>{name}</h1>
-
-                <span>Local: {address}</span>
-                <p>Dia: {dateLabel}</p>
-                <p>Criado em: {formatDate(createdAt)}</p>
-                <p>Atualizado em: {formatDate(updatedAt)}</p>
-              </S.ModalHeader>
-            )}
-            {activeTab === 1 && (
-              <>
-                <h2>Lista de membros do Grupo:</h2>
-                <S.AddParticipant>
-                  <S.ModalSelect
-                    name="selectedUserId"
-                    onChange={(e) => setSelectedUserId(e.target.value)}
-                    value={selectedUserId || ""}
-                    required
-                  >
-                    <option value="" disabled hidden>
-                      Escolha um participante
-                    </option>
-                    {usersAll?.map((user) => (
-                      <option key={user.id} value={user.id}>
-                        {user.name} - {user.email}
-                      </option>
-                    ))}
-                  </S.ModalSelect>
-                  <S.ModalButtons>
-                    <S.ModalButton
-                      type="button"
-                      onClick={() => handleSubscribe(String(id))}
-                    >
-                      Inscrever Participante
-                    </S.ModalButton>
-                  </S.ModalButtons>
-                </S.AddParticipant>
-                <S.Table>
-                  <thead>
-                    <tr>
-                      <th>Membro</th>
-                      <th>Email</th>
-                      <th>Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                  {Array.isArray(GroupMembers) && GroupMembers.length > 0 ? (
-                      GroupMembers.map((membro: any) => (
-                      <tr key={membro.member.id}>
-                        <td>{membro.member.name}</td>
-                        <td>{membro.member.email}</td>
-                        <td className="actions">
-                          <button
-                            // variant="delete"
-                            type="button"
-                            onClick={() => handleRemoveMember(id, membro.member.id)}
-                          >
-                            Remover do Grupo
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                    ) : (
-                    <h3>Nenhum participante cadastrado para esse grupo</h3>
-                    )}
-                  </tbody>
-                </S.Table>
-              </>
-            )}
-            {activeTab === 2 && (
-              <>
-                <h2>Relatórios</h2>
-                {reports.length > 0 ? (
-                  <S.ModalReportsList>
-                    {reports.map((report) => (
-                      <li key={report.id}>
-                        <p>Data: {report.dateLabel}</p>
-                        <p>Endereço: {report.address}</p>
-                        <p>Quantidade de Pessoas Prevista: {report.amount}</p>
-                        <p>
-                          Quantidade de Convertidos: {report.qtdAcceptedJesus}
-                        </p>
-                        <p>
-                          Quantidade de Mulheres Presentes:{" "}
-                          {report.qtdFemalePresence}
-                        </p>
-                        <p>
-                          Quantidade de Homens Presentes:{" "}
-                          {report.qtdMalePresence}
-                        </p>
-                        <p>
-                          Quantidade Total de Presentes: {report.qtdPresence}
-                        </p>
-                        <p>Quantidade de Visitantes: {report.qtdVisitor}</p>
-                        <Button
-                          variant="edit"
-                          onClick={() => handleEditReport(report)}
-                        >
-                          Editar
-                        </Button>
-                      </li>
-                    ))}
-                  </S.ModalReportsList>
-                ) : (
-                  <p>Nenhum relatório registrado ainda.</p>
+              <Button
+                variant="edit"
+                onClick={() => onEdit({ id, name, dateLabel, address })}
+              >
+                Editar
+              </Button>
+              <Button
+                variant="delete"
+                onClick={handleDelete}
+                disabled={deleteClicked}
+              >
+                {loading && deleteClicked && (
+                  <BeatLoader color={"#FFF"} size={10} />
                 )}
-              </>
-            )}
-            {activeTab === 3 && (
-              <>
-                <h2>Adicionar Presença</h2>
+                {!loading && !deleteClicked && "Excluir"}
+              </Button>
+            </S.CardEventActions>
 
-                <form onSubmit={handleSubmitPresence(onAddPresence)}>
-                  <Input
-                    type="hidden"
-                    value={id}
-                    {...registerPresence("groupId", {
-                      required: "Este campo é obrigatório",
-                    })}
+            <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}>
+              <S.ModalContainer>
+                <Tabs
+                  value={activeTab}
+                  onChange={(_, newValue) => setActiveTab(newValue)}
+                  sx={{ borderBottom: 1, borderColor: "divider" }}
+                >
+                  <Tab
+                    label="Detalhes da célula"
+                    sx={{
+                      textTransform: "none",
+                      fontWeight: "bold",
+                      color: "white",
+                    }}
                   />
-                  <label>
-                    Data e Hora:
-                    <Input
-                      {...registerPresence("dateLabel", {
-                        required: "Este campo é obrigatório",
-                      })}
-                    />
-                    {presenceErrors.dateLabel && (
-                      <S.ErrorMessage>
-                        {presenceErrors.dateLabel.message}
-                      </S.ErrorMessage>
-                    )}
-                  </label>
+                  <Tab
+                    label="Lista de Membros"
+                    sx={{
+                      textTransform: "none",
+                      fontWeight: "bold",
+                      color: "white",
+                    }}
+                  />
+                  <Tab
+                    label="Relatórios"
+                    sx={{
+                      textTransform: "none",
+                      fontWeight: "bold",
+                      color: "white",
+                    }}
+                  />
+                  <Tab
+                    label="Presenças"
+                    sx={{
+                      textTransform: "none",
+                      fontWeight: "bold",
+                      color: "white",
+                    }}
+                  />
+                </Tabs>
 
-                  <label>
-                    Aceitou Jesus:
-                    <Select
-                      {...registerPresence("isAcceptedJesus", {
-                        required: "Este campo é obrigatório",
-                      })}
-                      options={[
-                        { value: true, label: "Sim" },
-                        { value: false, label: "Não" },
-                      ]}
-                    />
-                    {errors.isAcceptedJesus &&
-                      errors.isAcceptedJesus.message && (
-                        <S.ErrorMessage>
-                          {errors.isAcceptedJesus.message}
-                        </S.ErrorMessage>
-                      )}
-                  </label>
+                {activeTab === 0 && (
+                  <S.ModalHeader>
+                    <h1>{name}</h1>
 
-                  <label>
-                    É Visitante:
-                    <Select
-                      {...registerPresence("isVisitor", {
-                        required: "Este campo é obrigatório",
-                      })}
-                      options={[
-                        { value: true, label: "Sim" },
-                        { value: false, label: "Não" },
-                      ]}
-                    />
-                    {errors.isVisitor && errors.isVisitor.message && (
-                      <S.ErrorMessage>
-                        {errors.isVisitor.message}
-                      </S.ErrorMessage>
-                    )}
-                  </label>
-                  <label>
-                    Participante:
-                    <S.ModalSelect
-                      name="selectedUserId"
-                      onChange={(e) => setSelectedUserId(e.target.value)}
-                      value={selectedUserId || ""}
-                      required
-                    >
-                      <option value="" disabled hidden>
-                        Escolha um participante
-                      </option>
-                      {usersAll?.map((user: Users) => (
-                        <option key={user.id} value={user.id}>
-                          {user.name} - {user.email}
-                        </option>
-                      ))}
-                    </S.ModalSelect>
-                    {presenceErrors.userId && (
-                      <S.ErrorMessage>
-                        {presenceErrors.userId.message}
-                      </S.ErrorMessage>
-                    )}
-                  </label>
-
-                  <Button type="submit" variant="edit">
-                    Adicionar Presença
-                  </Button>
-                </form>
-                <h2>Presenças</h2>
-
-                {presences.length > 0 ? (
-                  <S.ModalReportsList>
-                    {presences.map((presence) => (
-                      <li key={presence.id}>
-                        <p>{presence.member.name}</p>
-                        <p>Data: {presence.dateLabel}</p>
-                        <p>
-                          Aceitou Jesus:{" "}
-                          {presence.isAcceptedJesus ? "Sim" : "Não"}
-                        </p>
-                        <p>Visitante: {presence.isVisitor ? "Sim" : "Não"}</p>
-                        <Button
-                          variant="delete"
-                          onClick={() => handleDeletePresence(presence.id)}
-                        >
-                          Excluir
-                        </Button>
-                      </li>
-                    ))}
-                  </S.ModalReportsList>
-                ) : (
-                  <p>Nenhuma presença registrada ainda.</p>
+                    <span>Local: {address}</span>
+                    <p>Dia: {dateLabel}</p>
+                    <p>Criado em: {formatDate(createdAt)}</p>
+                    <p>Atualizado em: {formatDate(updatedAt)}</p>
+                  </S.ModalHeader>
                 )}
-              </>
-            )}
-          </S.ModalContainer>
-        </Modal>
+                {activeTab === 1 && (
+                  <>
+                    <h2>Lista de membros do Grupo:</h2>
+                    <S.AddParticipant>
+                      <S.ModalSelect
+                        name="selectedUserId"
+                        onChange={(e) => setSelectedUserId(e.target.value)}
+                        value={selectedUserId || ""}
+                        required
+                      >
+                        <option value="" disabled hidden>
+                          Escolha um participante
+                        </option>
+                        {usersAll?.map((user) => (
+                          <option key={user.id} value={user.id}>
+                            {user.name} - {user.email}
+                          </option>
+                        ))}
+                      </S.ModalSelect>
+                      <S.ModalButtons>
+                        <S.ModalButton
+                          type="button"
+                          onClick={() => handleSubscribe(String(id))}
+                        >
+                          Inscrever Participante
+                        </S.ModalButton>
+                      </S.ModalButtons>
+                    </S.AddParticipant>
+                    <S.Table>
+                      <thead>
+                        <tr>
+                          <th>Membro</th>
+                          <th>Email</th>
+                          <th>Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Array.isArray(GroupMembers) &&
+                        GroupMembers.length > 0 ? (
+                          GroupMembers.map((membro: any) => (
+                            <tr key={membro.member.id}>
+                              <td>{membro.member.name}</td>
+                              <td>{membro.member.email}</td>
+                              <td className="actions">
+                                <Button
+                                  variant="delete"
+                                  onClick={() =>
+                                    handleRemoveMember(id, membro.member.id)
+                                  }
+                                >
+                                  <Trash size={32} />
+                                </Button>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <h3>
+                            Nenhum participante cadastrado para esse grupo
+                          </h3>
+                        )}
+                      </tbody>
+                    </S.Table>
+                  </>
+                )}
+                {activeTab === 2 && (
+                  <>
+                    <h2>Relatórios</h2>
 
-        <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-          <h2>Cadastrar/editar Relatório</h2>
+                    <form onSubmit={handleSubmit(onSubmit)}>
+                      <Input
+                        type="hidden"
+                        value={id}
+                        {...register("groupId", {
+                          required: "Este campo é obrigatório",
+                        })}
+                      />
+                      <input type="hidden" name="groupId" value={id} />
+                      <label>
+                        Data e Hora:
+                        <Input
+                          {...register("dateLabel", {
+                            required: "Este campo é obrigatório",
+                          })}
+                        />
+                        {errors.dateLabel && (
+                          <S.ErrorMessage>
+                            {errors.dateLabel.message}
+                          </S.ErrorMessage>
+                        )}
+                      </label>
 
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <Input
-              type="hidden"
-              value={id}
-              {...register("groupId", {
-                required: "Este campo é obrigatório",
-              })}
-            />
-            <input type="hidden" name="groupId" value={id} />
-            <label>
-              Data e Hora:
-              <Input
-                {...register("dateLabel", {
-                  required: "Este campo é obrigatório",
-                })}
-              />
-              {errors.dateLabel && (
-                <S.ErrorMessage>{errors.dateLabel.message}</S.ErrorMessage>
-              )}
-            </label>
+                      <label>
+                        Endereço:
+                        <Input
+                          type="text"
+                          {...register("address", {
+                            required: "Este campo é obrigatório",
+                          })}
+                        />
+                        {errors.address && (
+                          <S.ErrorMessage>
+                            {errors.address.message}
+                          </S.ErrorMessage>
+                        )}
+                      </label>
 
-            <label>
-              Endereço:
-              <Input
-                type="text"
-                {...register("address", {
-                  required: "Este campo é obrigatório",
-                })}
-              />
-              {errors.address && (
-                <S.ErrorMessage>{errors.address.message}</S.ErrorMessage>
-              )}
-            </label>
+                      <label>
+                        Quantidade de Participantes:
+                        <Input
+                          type="number"
+                          {...register("amount", {
+                            required: "Este campo é obrigatório",
+                          })}
+                        />
+                        {errors.amount && (
+                          <S.ErrorMessage>
+                            {errors.amount.message}
+                          </S.ErrorMessage>
+                        )}
+                      </label>
 
-            <label>
-              Quantidade de Participantes:
-              <Input
-                type="number"
-                {...register("amount", {
-                  required: "Este campo é obrigatório",
-                })}
-              />
-              {errors.amount && (
-                <S.ErrorMessage>{errors.amount.message}</S.ErrorMessage>
-              )}
-            </label>
+                      <label>
+                        Descrição do relatório:
+                        <TextArea
+                          rows={4}
+                          cols={50}
+                          {...register("obs", {
+                            required: "Este campo é obrigatório",
+                          })}
+                        />
+                        {errors.obs && (
+                          <S.ErrorMessage>{errors.obs.message}</S.ErrorMessage>
+                        )}
+                      </label>
 
-            <label>
-              Descrição do relatório:
-              <TextArea
-                rows={4}
-                cols={50}
-                {...register("obs", {
-                  required: "Este campo é obrigatório",
-                })}
-              />
-              {errors.obs && (
-                <S.ErrorMessage>{errors.obs.message}</S.ErrorMessage>
-              )}
-            </label>
+                      <Button type="submit" variant="edit">
+                        {loading ? (
+                          <BeatLoader color={"#fff"} size={10} />
+                        ) : editingReports ? (
+                          "Editar"
+                        ) : (
+                          "Cadastrar"
+                        )}
+                      </Button>
+                    </form>
+                    {reports.length > 0 ? (
+                      <S.ModalReportsList>
+                        {reports.map((report) => (
+                          <li key={report.id}>
+                            <p>Data: {report.dateLabel}</p>
+                            <p>Endereço: {report.address}</p>
+                            <p>
+                              Quantidade de Pessoas Prevista: {report.amount}
+                            </p>
+                            <p>
+                              Quantidade de Convertidos:{" "}
+                              {report.qtdAcceptedJesus}
+                            </p>
+                            <p>
+                              Quantidade de Mulheres Presentes:{" "}
+                              {report.qtdFemalePresence}
+                            </p>
+                            <p>
+                              Quantidade de Homens Presentes:{" "}
+                              {report.qtdMalePresence}
+                            </p>
+                            <p>
+                              Quantidade Total de Presentes:{" "}
+                              {report.qtdPresence}
+                            </p>
+                            <p>Quantidade de Visitantes: {report.qtdVisitor}</p>
+                            <Button
+                              variant="edit"
+                              onClick={() => handleEditReport(report)}
+                            >
+                              Editar
+                            </Button>
+                          </li>
+                        ))}
+                      </S.ModalReportsList>
+                    ) : (
+                      <p>Nenhum relatório registrado ainda.</p>
+                    )}
+                  </>
+                )}
+                {activeTab === 3 && (
+                  <>
+                    <h2>Adicionar Presença</h2>
 
-            <Button type="submit" variant="edit">
-              {loading ? (
-                <BeatLoader color={"#fff"} size={10} />
-              ) : editingReports ? (
-                "Editar"
-              ) : (
-                "Cadastrar"
-              )}
-            </Button>
-          </form>
-        </Modal>
+                    <form onSubmit={handleSubmitPresence(onAddPresence)}>
+                      <Input
+                        type="hidden"
+                        value={id}
+                        {...registerPresence("groupId", {
+                          required: "Este campo é obrigatório",
+                        })}
+                      />
+                      <label>
+                        Data e Hora:
+                        <Input
+                          {...registerPresence("dateLabel", {
+                            required: "Este campo é obrigatório",
+                          })}
+                        />
+                        {presenceErrors.dateLabel && (
+                          <S.ErrorMessage>
+                            {presenceErrors.dateLabel.message}
+                          </S.ErrorMessage>
+                        )}
+                      </label>
 
-        {/* <Modal
-          isOpen={isModalPresenceOpen}
-          onClose={() => setIsModalPresenceOpen(false)}
-        >
-   
-        </Modal> */}
-      </S.CardEvent>
+                      <label>
+                        Aceitou Jesus:
+                        <Select
+                          {...registerPresence("isAcceptedJesus", {
+                            required: "Este campo é obrigatório",
+                          })}
+                          options={[
+                            { value: true, label: "Sim" },
+                            { value: false, label: "Não" },
+                          ]}
+                        />
+                        {errors.isAcceptedJesus &&
+                          errors.isAcceptedJesus.message && (
+                            <S.ErrorMessage>
+                              {errors.isAcceptedJesus.message}
+                            </S.ErrorMessage>
+                          )}
+                      </label>
+
+                      <label>
+                        É Visitante:
+                        <Select
+                          {...registerPresence("isVisitor", {
+                            required: "Este campo é obrigatório",
+                          })}
+                          options={[
+                            { value: true, label: "Sim" },
+                            { value: false, label: "Não" },
+                          ]}
+                        />
+                        {errors.isVisitor && errors.isVisitor.message && (
+                          <S.ErrorMessage>
+                            {errors.isVisitor.message}
+                          </S.ErrorMessage>
+                        )}
+                      </label>
+                      <h3>Participante</h3>
+
+                      <S.AddParticipant>
+                        <S.ModalSelect
+                          name="selectedUserId"
+                          onChange={(e) => setSelectedUserId(e.target.value)}
+                          value={selectedUserId || ""}
+                          required
+                        >
+                          <option value="" disabled hidden>
+                            Escolha um participante
+                          </option>
+                          {usersAll?.map((user: Users) => (
+                            <option key={user.id} value={user.id}>
+                              {user.name} - {user.email}
+                            </option>
+                          ))}
+                        </S.ModalSelect>
+                        {presenceErrors.userId && (
+                          <S.ErrorMessage>
+                            {presenceErrors.userId.message}
+                          </S.ErrorMessage>
+                        )}
+                      </S.AddParticipant>
+                      <Button type="submit" variant="edit">
+                        Adicionar Presença
+                      </Button>
+                    </form>
+                    <h2>Presenças</h2>
+
+                    {presences.length > 0 ? (
+                      <S.ModalReportsList>
+                        {presences.map((presence) => (
+                          <li key={presence.id}>
+                            <p>{presence.member.name}</p>
+                            <p>Data: {presence.dateLabel}</p>
+                            <p>
+                              Aceitou Jesus:{" "}
+                              {presence.isAcceptedJesus ? "Sim" : "Não"}
+                            </p>
+                            <p>
+                              Visitante: {presence.isVisitor ? "Sim" : "Não"}
+                            </p>
+                            <Button
+                              variant="delete"
+                              onClick={() => handleDeletePresence(presence.id)}
+                            >
+                              Excluir
+                            </Button>
+                          </li>
+                        ))}
+                      </S.ModalReportsList>
+                    ) : (
+                      <p>Nenhuma presença registrada ainda.</p>
+                    )}
+                  </>
+                )}
+              </S.ModalContainer>
+            </Modal>
+          </S.CardEvent>
+        </>
+      )}
     </>
   );
 };

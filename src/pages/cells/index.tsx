@@ -9,6 +9,8 @@ import { Modal } from "../../components/Modal";
 import Input from "../../components/Input";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { BeatLoader } from "react-spinners";
+import Loading from "../../components/loading";
+import { MagnifyingGlass } from "@phosphor-icons/react";
 
 import * as S from "./styles";
 import api from "../../services/api";
@@ -53,6 +55,7 @@ export const CellsPage: React.FC = () => {
   const [userGroups, setUserGroups] = useState<CellsData[] | null>(null);
 
   const [loading, setLoading] = useState(false);
+  const [compLoading, setCompLoading] = useState(false);
 
   const {
     register,
@@ -72,6 +75,7 @@ export const CellsPage: React.FC = () => {
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     setLoading(true);
+    setCompLoading(true);
     try {
       let imgUpload: File | string | null = selectedImage;
 
@@ -117,6 +121,7 @@ export const CellsPage: React.FC = () => {
     } finally {
       queryClient.invalidateQueries("getCellsList");
       setLoading(false);
+      setCompLoading(false);
     }
   };
 
@@ -133,21 +138,24 @@ export const CellsPage: React.FC = () => {
       params: { search: searchQuery }, // Add search query parameter
     });
     setListCells(response.data.groups);
-    console.log(response.data.groups);
 
     return response.data.groups;
   };
 
   const getUserGroups = async () => {
     try {
+      setCompLoading(true);
       const response = await api.get<{ groups: CellsData[] }>("/group/me");
       setUserGroups(response.data.groups);
-      console.log(response.data.groups);
     } catch (error) {
-      console.error("Erro ao obter grupos do usuário:", error);
+      toast.error("Erro ao obter grupos do usuário:" + error);
+    } finally {
+      setCompLoading(false);
     }
   };
-
+  const handleGetAction = () => {
+    queryClient.invalidateQueries("getCellsList");
+  };
   const { data, isLoading } = useQuery(
     ["getCellsList", searchQuery],
     GET_CELLS_LIST
@@ -158,7 +166,7 @@ export const CellsPage: React.FC = () => {
     ) || [];
 
   const handleDelete = async (id: string) => {
-    setLoading(true);
+    setCompLoading(true);
     try {
       await api.delete(`/group/${id}`);
 
@@ -167,137 +175,153 @@ export const CellsPage: React.FC = () => {
       toast.error("Erro ao excluir Grupo:" + error);
     } finally {
       queryClient.invalidateQueries("getCellsList");
-      setLoading(false);
+      setCompLoading(false);
     }
   };
 
   return (
-    <Layout>
-      <S.ActionsNews>
-        <h1>Células</h1>
-        <label>
-          Buscar Célula:
-          <Input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </label>
+    <>
+      {compLoading ? (
+        <Loading dark />
+      ) : (
+        <>
+          <Layout>
+            <S.ActionsNews>
+              <h1>Células</h1>
+              <S.ContainerFilter>
+                <label>
+                  Buscar Célula:
+                  <Input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </label>
 
-        <Button variant="default" onClick={() => getUserGroups()}>
-          Ver Meus Grupos
-        </Button>
+                <div>
+                  <Button variant="default" onClick={() => getUserGroups()}>
+                    <MagnifyingGlass size={18} />
+                  </Button>
+                </div>
+              </S.ContainerFilter>
 
-        <S.Actions>
-          <Button variant="default" onClick={() => setIsModalOpen(true)}>
-            Cadastrar Célula
-          </Button>
-        </S.Actions>
-      </S.ActionsNews>
-      <S.NewsWrapper>
-        {isLoading && <span>Carregando células...</span>}
+              <S.Actions>
+                <Button variant="default" onClick={() => setIsModalOpen(true)}>
+                  Cadastrar Célula
+                </Button>
+              </S.Actions>
+            </S.ActionsNews>
+            <S.NewsWrapper>
+              {isLoading && <span>Carregando células...</span>}
 
-        {!isLoading && data && data.length === 0 && (
-          <span>Não há células cadastradas.</span>
-        )}
+              {!isLoading && data && data.length === 0 && (
+                <span>Não há células cadastradas.</span>
+              )}
 
-        {!isLoading &&
-          !userGroups &&
-          filteredData.length > 0 &&
-          filteredData.map((cell: CellsData) => (
-            <CellsCard
-              key={cell.id}
-              name={cell.name}
-              address={cell.address}
-              image={cell.img?.url || null}
-              id={cell.id}
-              dateLabel={cell.dateLabel}
-              createdAt={cell.createdAt}
-              updatedAt={cell.updatedAt}
-              GroupMembers={cell.GroupMembers || []}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              loading={loading}
-            />
-          ))}
+              {!isLoading &&
+                !userGroups &&
+                filteredData.length > 0 &&
+                filteredData.map((cell: CellsData) => (
+                  <CellsCard
+                    key={cell.id}
+                    name={cell.name}
+                    address={cell.address}
+                    image={cell.img?.url || null}
+                    id={cell.id}
+                    dateLabel={cell.dateLabel}
+                    createdAt={cell.createdAt}
+                    updatedAt={cell.updatedAt}
+                    GroupMembers={cell.GroupMembers || []}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    loading={loading}
+                    GET_CELLS_LIST={handleGetAction}
+                  />
+                ))}
 
-        {userGroups &&
-          userGroups.map((group) => (
-            <CellsCard
-              key={group.id}
-              name={group.name}
-              address={group.address}
-              image={group.img?.url || null}
-              id={group.id}
-              dateLabel={group.dateLabel}
-              createdAt={group.createdAt}
-              updatedAt={group.updatedAt}
-              GroupMembers={group.GroupMembers || []}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              loading={loading}
-            />
-          ))}
-      </S.NewsWrapper>
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        <h2>Cadastrar/editar células</h2>
+              {userGroups &&
+                userGroups.map((group) => (
+                  <CellsCard
+                    key={group.id}
+                    name={group.name}
+                    address={group.address}
+                    image={group.img?.url || null}
+                    id={group.id}
+                    dateLabel={group.dateLabel}
+                    createdAt={group.createdAt}
+                    updatedAt={group.updatedAt}
+                    GroupMembers={group.GroupMembers || []}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    loading={loading}
+                    GET_CELLS_LIST={handleGetAction}
+                  />
+                ))}
+            </S.NewsWrapper>
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+              <h2>Cadastrar/editar células</h2>
 
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <label>
-            Nome da Célula:
-            <Input
-              type="text"
-              {...register("name", { required: "Este campo é obrigatório" })}
-            />
-            {errors.name && (
-              <S.ErrorMessage>{errors.name.message}</S.ErrorMessage>
-            )}
-          </label>
+              <form onSubmit={handleSubmit(onSubmit)}>
+                <label>
+                  Nome da Célula:
+                  <Input
+                    type="text"
+                    {...register("name", {
+                      required: "Este campo é obrigatório",
+                    })}
+                  />
+                  {errors.name && (
+                    <S.ErrorMessage>{errors.name.message}</S.ErrorMessage>
+                  )}
+                </label>
 
-          <label>
-            Endereço da Célula:
-            <Input
-              type="text"
-              {...register("address", {
-                required: "Este campo é obrigatório",
-              })}
-            />
-            {errors.address && (
-              <S.ErrorMessage>{errors.address.message}</S.ErrorMessage>
-            )}
-          </label>
-          <label>
-            Data e Hora:
-            <Input
-              {...register("dateLabel", {
-                required: "Este campo é obrigatório",
-              })}
-            />
-            {errors.dateLabel && (
-              <S.ErrorMessage>{errors.dateLabel.message}</S.ErrorMessage>
-            )}
-          </label>
+                <label>
+                  Endereço da Célula:
+                  <Input
+                    type="text"
+                    {...register("address", {
+                      required: "Este campo é obrigatório",
+                    })}
+                  />
+                  {errors.address && (
+                    <S.ErrorMessage>{errors.address.message}</S.ErrorMessage>
+                  )}
+                </label>
+                <label>
+                  Data e Hora:
+                  <Input
+                    {...register("dateLabel", {
+                      required: "Este campo é obrigatório",
+                    })}
+                  />
+                  {errors.dateLabel && (
+                    <S.ErrorMessage>{errors.dateLabel.message}</S.ErrorMessage>
+                  )}
+                </label>
 
-          <label>
-            Imagem:
-            <S.InputImage
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-            />
-          </label>
+                <label>
+                  Imagem:
+                  <S.InputImage
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                  />
+                </label>
 
-          <Button type="submit" variant="edit">
-            {loading ? (
-              <BeatLoader color={"#fff"} size={10} />
-            ) : editingCells ? (
-              "Editar"
-            ) : (
-              "Cadastrar"
-            )}
-          </Button>
-        </form>
-      </Modal>
-    </Layout>
+                <Button type="submit" variant="edit">
+                  {loading ? (
+                    <BeatLoader color={"#fff"} size={10} />
+                  ) : editingCells ? (
+                    "Editar"
+                  ) : (
+                    "Cadastrar"
+                  )}
+                </Button>
+              </form>
+            </Modal>
+          </Layout>
+        </>
+      )}
+    </>
   );
 };

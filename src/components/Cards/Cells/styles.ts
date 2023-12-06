@@ -104,6 +104,7 @@ export const ModalSelect = styled.select`
   border-radius: ${border_rounded};
   background-color: ${input_background};
   margin-bottom: 1rem;
+  width: 70%;
 `;
 
 export const ModalButtons = styled.div`
@@ -169,3 +170,13 @@ export const Table = styled.table`
     
   }
 `;
+export const InputDate = styled.input`
+  outline: none;
+  padding: 0.5rem;
+  font-size: 1rem;
+  border: 2px solid rgb(40, 39, 44);
+  color: #FFF;
+  border-radius: ${border_rounded};
+  background-color: ${input_background};
+  width: 100%;
+`
