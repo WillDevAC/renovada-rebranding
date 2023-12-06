@@ -86,6 +86,8 @@ export const UsersPage: React.FC = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [leaderedUsers, setLeaderedUsers] = useState<User[]>([]);
 
+  const [searchTerm, setSearchTerm] = useState('');
+
   const { control, handleSubmit, register } = useForm<FormData>();
 
   useEffect(() => {
@@ -205,6 +207,14 @@ export const UsersPage: React.FC = () => {
     handleOpenModal();
   };
 
+  const handleSearchInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(event.target.value);
+  };
+
+  const filteredUsers = users.filter((user) =>
+      user.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <ThemeProvider theme={darkTheme}>
       <Layout>
@@ -226,10 +236,15 @@ export const UsersPage: React.FC = () => {
         <Container>
           <Box mt={4}>
             <Typography component="h1" variant="h4">
-              Usuários que você lidera
+              Todos os Usuários
             </Typography>
+            <Input
+                label="Buscar por nome:"
+                value={searchTerm}
+                onChange={handleSearchInputChange}
+            />
             <Grid container spacing={4}>
-              {leaderedUsers.map((user) => (
+              {filteredUsers.map((user) => (
                 <Grid item key={user.id} xs={12} sm={6} md={4} lg={3} mt={4}>
                   <Paper
                     elevation={3}
@@ -287,61 +302,62 @@ export const UsersPage: React.FC = () => {
 
           <Box mt={4}>
             <Typography component="h1" variant="h4">
-              Todos os Usuários
+              Usuários que você lidera
             </Typography>
-            <Grid container spacing={4}>
-              {users.map((user) => (
-                <Grid item key={user.id} xs={12} sm={6} md={4} lg={3} mt={4}>
-                  <Paper
-                    elevation={3}
-                    sx={{
-                      p: 2,
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Avatar
-                      alt={user.name}
-                      src={user.avatar?.url}
-                      sx={{ width: 80, height: 80, mb: 2 }}
-                    />
-                    <Typography variant="h6" gutterBottom>
-                      {user.name}
-                    </Typography>
-                    <Typography color="textSecondary">{user.email}</Typography>
-                    <Typography color="textSecondary">
-                      {user.isActive == true
-                        ? "O usuário esta: ativo"
-                        : "O usuário esta: desativo"}
-                    </Typography>
 
-                    <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
-                      <Button
-                        variant="edit"
-                        onClick={() => handleEditUser(user)}
-                      >
-                        Editar
-                      </Button>
-                      <Button
-                        variant="delete"
-                        onClick={() => deleteUser(user.id)}
-                      >
-                        Excluir
-                      </Button>
-                    </Box>
-                    <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
-                      <Button
-                        variant="edit"
-                        onClick={() => toggleUserStatus(user.id, user.isActive)}
-                      >
+            <Grid container spacing={4}>
+              {leaderedUsers.map((user) => (
+                  <Grid item key={user.id} xs={12} sm={6} md={4} lg={3} mt={4}>
+                    <Paper
+                        elevation={3}
+                        sx={{
+                          p: 2,
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                        }}
+                    >
+                      <Avatar
+                          alt={user.name}
+                          src={user.avatar?.url}
+                          sx={{ width: 80, height: 80, mb: 2 }}
+                      />
+                      <Typography variant="h6" gutterBottom>
+                        {user.name}
+                      </Typography>
+                      <Typography color="textSecondary">{user.email}</Typography>
+                      <Typography color="textSecondary">
                         {user.isActive == true
-                          ? "Desativar usuário"
-                          : "Ativar usuário"}
-                      </Button>
-                    </Box>
-                  </Paper>
-                </Grid>
+                            ? "O usuário esta: ativo"
+                            : "O usuário esta: desativo"}
+                      </Typography>
+
+                      <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
+                        <Button
+                            variant="edit"
+                            onClick={() => handleEditUser(user)}
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                            variant="delete"
+                            onClick={() => deleteUser(user.id)}
+                        >
+                          Excluir
+                        </Button>
+                      </Box>
+                      <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
+                        <Button
+                            variant="edit"
+                            onClick={() => toggleUserStatus(user.id, user.isActive)}
+                        >
+                          {user.isActive == true
+                              ? "Desativar usuário"
+                              : "Ativar usuário"}
+                        </Button>
+                      </Box>
+                    </Paper>
+                  </Grid>
               ))}
             </Grid>
           </Box>
