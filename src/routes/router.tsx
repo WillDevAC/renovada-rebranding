@@ -7,6 +7,7 @@ import { EventsPage } from "../pages/Events";
 import { CellsPage } from "../pages/cells";
 import { WordsPage } from "../pages/Words";
 import { NewsPage } from "../pages/News";
+import { UsersPage } from "../pages/users";
 
 export const RouterController = () => {
   const authStore = useAuthStore();
@@ -26,6 +27,7 @@ export const RouterController = () => {
             <Route path="/words" element={<WordsPage />} />
             <Route path="/events" element={<EventsPage />} />
             <Route path="/news" element={<NewsPage />} />
+            <Route path="/users" element={<UsersPage />} />
           </>
         )}
       </Routes>
